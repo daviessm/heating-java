@@ -1,0 +1,12 @@
+[submodule "lib/hid4java"]
+	path = lib/hid4java
+	url = https://github.com/gary-rowe/hid4java
+[submodule "lib/jna"]
+	path = lib/jna
+	url = https://github.com/java-native-access/jna.git
+[submodule "lib/tinyb"]
+	path = lib/tinyb
+	url = https://github.com/intel-iot-devkit/tinyb.git
+[submodule "lib/google-api-java-client"]
+	path = lib/google-api-java-client
+	url = https://github.com/google/google-api-java-client.git

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/jna/dist/jna.jar"/>
+	<classpathentry kind="lib" path="lib/jna/dist/linux-arm.jar"/>
+	<classpathentry kind="lib" path="lib/hid4java/src/main/java"/>
+	<classpathentry kind="lib" path="lib/hid4java/src/main/resources"/>
+	<classpathentry kind="lib" path="lib/tinyb/build/java/tinyb.jar" sourcepath="lib/tinyb/java"/>
+	<classpathentry kind="lib" path="lib/google-api-java-client"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
