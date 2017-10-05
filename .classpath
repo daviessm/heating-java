@@ -8,5 +8,6 @@
 	<classpathentry kind="lib" path="lib/hid4java/src/main/resources"/>
 	<classpathentry kind="lib" path="lib/tinyb/build/java/tinyb.jar" sourcepath="lib/tinyb/java"/>
 	<classpathentry kind="lib" path="lib/google-api-java-client"/>
+	<classpathentry kind="lib" path="/usr/share/log4j/lib/log4j.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
