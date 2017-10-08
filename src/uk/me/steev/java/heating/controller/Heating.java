@@ -1,16 +1,58 @@
 package uk.me.steev.java.heating.controller;
 
-import java.util.Map;
+import java.io.File;
 
-import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
+import uk.me.steev.java.heating.io.api.CalendarAdapter;
+import uk.me.steev.java.heating.io.api.CallFailedException;
+import uk.me.steev.java.heating.io.api.WeatherAdapter;
+import uk.me.steev.java.heating.io.boiler.Boiler;
+import uk.me.steev.java.heating.io.boiler.Relay;
+import uk.me.steev.java.heating.io.boiler.RelayTypes;
 
 public class Heating {
+  HeatingConfiguration config;
+  Boiler b;
+  
+  public Heating(File configFile) throws HeatingException {
+    this.config = HeatingConfiguration.getConfiguration(configFile);
+    Relay heatingRelay = Relay.findRelay(RelayTypes.USB_1, config.getRelay("heating"));
+    Relay preheatRelay = Relay.findRelay(RelayTypes.USB_1, config.getRelay("preheat"));
+    Boiler b = new Boiler(heatingRelay, preheatRelay);
+    b.startHeating();
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException ie) {
+      ie.printStackTrace();
+    }
+    b.stopHeating();
+  }
+
+  public Heating() throws HeatingException {
+   this(new File("config.json"));
+  }
+  
+  public void run() {
+    try {
+      WeatherAdapter weather = new WeatherAdapter(this.config);
+      //CalendarAdapter calendar = new CalendarAdapter(this.config);
+      System.out.println(weather.getApparentTemperature() + " " + weather.getLatestTemperature());
+      //System.out.println(calendar.update());
+    } catch (HeatingException he) {
+      //TODO logging
+      he.printStackTrace();
+    } catch (CallFailedException cfe) {
+      //TODO logging
+      cfe.printStackTrace();
+    }
+  }
 
   public static void main(String[] args) {
-    Map<String,BluetoothTemperatureSensor> sensors = BluetoothTemperatureSensor.scanForSensors(null);
-    
-    for (BluetoothTemperatureSensor sensor : sensors.values()) {
-      System.out.println(sensor.getName());
+    try {
+      Heating heating = new Heating();
+      heating.run();
+    } catch (HeatingException he) {
+      //TODO logging
+      he.printStackTrace();
     }
   }
 }
