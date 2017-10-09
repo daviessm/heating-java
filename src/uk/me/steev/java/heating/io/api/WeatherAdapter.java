@@ -21,9 +21,9 @@ public class WeatherAdapter {
   public void update() throws HeatingException {
     try {
       this.latestReading = JSONUtils.readJsonFromUrl("https://api.darksky.net/forecast/" +
-                                                     this.config.getDarkSkyApiKey() + 
+                                                     this.config.getSetting("darksky", "api_key") + 
                                                      "/" + 
-                                                     this.config.getDarkSkyLatLong() +
+                                                     this.config.getSetting("darksky", "latlong") +
                                                      "?exclude=[minutely,hourly,daily]&units=si");
     } catch (IOException ioe) {
       //TODO log
