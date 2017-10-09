@@ -1,6 +1,10 @@
 package uk.me.steev.java.heating.controller;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import com.google.api.services.calendar.model.Event;
 
 import uk.me.steev.java.heating.io.api.CalendarAdapter;
 import uk.me.steev.java.heating.io.api.CallFailedException;
@@ -33,16 +37,21 @@ public class Heating {
   
   public void run() {
     try {
-      WeatherAdapter weather = new WeatherAdapter(this.config);
-      //CalendarAdapter calendar = new CalendarAdapter(this.config);
-      System.out.println(weather.getApparentTemperature() + " " + weather.getLatestTemperature());
+      //WeatherAdapter weather = new WeatherAdapter(this.config);
+      CalendarAdapter calendar = new CalendarAdapter(this.config);
+      List<Event> events = calendar.getEvents();
+      System.out.println(events);
+      //System.out.println(weather.getApparentTemperature() + " " + weather.getLatestTemperature());
       //System.out.println(calendar.update());
     } catch (HeatingException he) {
       //TODO logging
       he.printStackTrace();
-    } catch (CallFailedException cfe) {
+    //} catch (CallFailedException cfe) {
       //TODO logging
-      cfe.printStackTrace();
+      //cfe.printStackTrace();
+    } catch (IOException ioe) {
+      //TODO logging
+      ioe.printStackTrace();
     }
   }
 
