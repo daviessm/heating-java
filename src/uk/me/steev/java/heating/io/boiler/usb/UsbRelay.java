@@ -1,13 +1,10 @@
-package uk.me.steev.java.heating.io.boiler;
+package uk.me.steev.java.heating.io.boiler.usb;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import uk.me.steev.java.heating.io.boiler.usb.UsbDevice;
-import uk.me.steev.java.heating.io.boiler.usb.UsbException;
-import uk.me.steev.java.heating.io.boiler.usb.UsbPhysicalLocation;
-import uk.me.steev.java.heating.io.boiler.usb.UsbUtils;
+import uk.me.steev.java.heating.io.boiler.Relay;
 
 public class UsbRelay extends Relay {
   protected UsbDevice device;
@@ -52,7 +49,7 @@ public class UsbRelay extends Relay {
     return relays;
   }
 
-  public UsbRelay(UsbDevice device) {
+  protected UsbRelay(UsbDevice device) {
     this.device = device;
   }
   

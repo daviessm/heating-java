@@ -27,6 +27,8 @@ import uk.me.steev.java.heating.controller.HeatingException;
 public class CalendarAdapter {
   protected HeatingConfiguration config;
   protected Calendar calendar;
+  protected List<Event> latestEvents;
+  protected EventsUpdater eventsUpdater;
 
   /** Directory to store user credentials for this application. */
   private static final java.io.File DATA_STORE_DIR = new java.io.File(
@@ -62,6 +64,8 @@ public class CalendarAdapter {
 
   public CalendarAdapter(HeatingConfiguration config) throws IOException, HeatingException {
     this.config = config;
+    latestEvents = new ArrayList<Event>(10);
+    eventsUpdater = new EventsUpdater();
     
     List<String> redirectURLs = new ArrayList<String>();
     redirectURLs.add("urn:ietf:wg:oauth:2.0:oob");
@@ -101,5 +105,48 @@ public class CalendarAdapter {
         .execute();
     
     return events.getItems();
+  }
+  
+  public HeatingConfiguration getConfig() {
+    return config;
+  }
+
+  public void setConfig(HeatingConfiguration config) {
+    this.config = config;
+  }
+
+  public Calendar getCalendar() {
+    return calendar;
+  }
+
+  public void setCalendar(Calendar calendar) {
+    this.calendar = calendar;
+  }
+
+  public List<Event> getLatestEvents() {
+    return latestEvents;
+  }
+
+  public void setLatestEvents(List<Event> latestEvents) {
+    this.latestEvents = latestEvents;
+  }
+
+  public EventsUpdater getEventsUpdater() {
+    return eventsUpdater;
+  }
+
+  public void setEventsUpdater(EventsUpdater eventsUpdater) {
+    this.eventsUpdater = eventsUpdater;
+  }
+
+  public class EventsUpdater implements Runnable {
+    public void run() {
+      try {
+        latestEvents = getEvents();
+      } catch (IOException | HeatingException e) {
+        //TODO
+        e.printStackTrace();
+      }
+    }
   }
 }

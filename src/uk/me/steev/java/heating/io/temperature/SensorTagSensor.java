@@ -2,7 +2,7 @@ package uk.me.steev.java.heating.io.temperature;
 
 import tinyb.BluetoothDevice;
 
-public class SensorTagSensor extends BluetoothTemperatureSensor implements ReturnsTemperature {
+public class SensorTagSensor extends BluetoothTemperatureSensor {
 
   public SensorTagSensor(BluetoothDevice device) {
     super(device);

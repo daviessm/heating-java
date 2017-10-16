@@ -12,10 +12,11 @@ import uk.me.steev.java.heating.utils.JSONUtils;
 public class WeatherAdapter {
   protected JSONObject latestReading;
   protected HeatingConfiguration config;
+  protected TemperatureUpdater updater;
   
   public WeatherAdapter(HeatingConfiguration config) throws HeatingException {
     this.config = config;
-    update();
+    this.updater = new TemperatureUpdater();
   }
   
   public void update() throws HeatingException {
@@ -53,5 +54,40 @@ public class WeatherAdapter {
       }
     }
     throw new CallFailedException("Stored JSON is null");
+  }
+  
+  public JSONObject getLatestReading() {
+    return latestReading;
+  }
+
+  public void setLatestReading(JSONObject latestReading) {
+    this.latestReading = latestReading;
+  }
+
+  public HeatingConfiguration getConfig() {
+    return config;
+  }
+
+  public void setConfig(HeatingConfiguration config) {
+    this.config = config;
+  }
+
+  public TemperatureUpdater getUpdater() {
+    return updater;
+  }
+
+  public void setUpdater(TemperatureUpdater updater) {
+    this.updater = updater;
+  }
+
+  public class TemperatureUpdater implements Runnable {
+    public void run() {
+      try {
+        update();
+      } catch (HeatingException he) {
+        //TODO
+        he.printStackTrace();
+      }
+    }
   }
 }

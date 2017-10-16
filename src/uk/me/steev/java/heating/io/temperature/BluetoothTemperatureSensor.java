@@ -17,6 +17,9 @@ public class BluetoothTemperatureSensor {
   protected String name;
   protected List<BluetoothGattService> services;
   protected Map<String, BluetoothGattCharacteristic> characteristics;
+  protected float currentTemperature;
+  protected LocalDateTime tempLastUpdated;
+  protected TemperatureUpdater temperatureUpdater;
   
   protected BluetoothTemperatureSensor(BluetoothDevice device) {
     this.device = device;
@@ -32,6 +35,8 @@ public class BluetoothTemperatureSensor {
         this.characteristics.put(characteristic.getUUID(), characteristic);
       }
     }
+    
+    this.temperatureUpdater = new TemperatureUpdater();
   }
   
   protected void disconnect() {
@@ -95,6 +100,10 @@ public class BluetoothTemperatureSensor {
     }
     return currentDevices;
   }
+  
+  public float getAmbientTemperature() throws BluetoothException {
+    return 0f;
+  }
 
   public String getName() {
     return name;
@@ -102,5 +111,65 @@ public class BluetoothTemperatureSensor {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public BluetoothDevice getDevice() {
+    return device;
+  }
+
+  public void setDevice(BluetoothDevice device) {
+    this.device = device;
+  }
+
+  public List<BluetoothGattService> getServices() {
+    return services;
+  }
+
+  public void setServices(List<BluetoothGattService> services) {
+    this.services = services;
+  }
+
+  public Map<String, BluetoothGattCharacteristic> getCharacteristics() {
+    return characteristics;
+  }
+
+  public void setCharacteristics(Map<String, BluetoothGattCharacteristic> characteristics) {
+    this.characteristics = characteristics;
+  }
+
+  public float getCurrentTemperature() {
+    return currentTemperature;
+  }
+
+  public void setCurrentTemperature(float currentTemperature) {
+    this.currentTemperature = currentTemperature;
+  }
+
+  public LocalDateTime getTempLastUpdated() {
+    return tempLastUpdated;
+  }
+
+  public void setTempLastUpdated(LocalDateTime tempLastUpdated) {
+    this.tempLastUpdated = tempLastUpdated;
+  }
+
+  public TemperatureUpdater getTemperatureUpdater() {
+    return temperatureUpdater;
+  }
+
+  public void setTemperatureUpdater(TemperatureUpdater temperatureUpdater) {
+    this.temperatureUpdater = temperatureUpdater;
+  }
+
+  public class TemperatureUpdater implements Runnable {
+    public void run() {
+      try {
+        currentTemperature = getAmbientTemperature();
+        tempLastUpdated = LocalDateTime.now();
+      } catch (BluetoothException be) {
+        //TODO
+        be.printStackTrace();
+      }
+    }
   }
 }
