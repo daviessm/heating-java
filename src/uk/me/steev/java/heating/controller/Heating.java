@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -133,10 +134,11 @@ public class Heating {
     public void run() {
       Map<String,BluetoothTemperatureSensor> newDevices = BluetoothTemperatureSensor.scanForSensors(sensors);
       synchronized (sensors) {
-        for (String address : newDevices.keySet()) {
-          if (!sensors.containsKey(address)) {
-            Runnable task = newDevices.get(address).getTemperatureUpdater();
+        for (Entry<String, BluetoothTemperatureSensor> entry : newDevices.entrySet()) {
+          if (!sensors.containsKey(entry.getKey())) {
+            Runnable task = newDevices.get(entry.getKey()).getTemperatureUpdater();
             scheduledExecutor.scheduleAtFixedRate(task, 0, 1, TimeUnit.MINUTES);
+            sensors.put(entry.getKey(), entry.getValue());
           }
         }
       }
@@ -145,7 +147,7 @@ public class Heating {
   
   public class HeatingProcessor implements Runnable {
     public void run() {
-      //Do preheat firsy, it doesn't rely on temperature
+      //Do preheat first, it doesn't rely on temperature
       //Get a list of preheat events
       List<Event> preheatEvents = new ArrayList<>();
       for (Event event : calendar.getLatestEvents()) {
@@ -172,70 +174,127 @@ public class Heating {
             re.printStackTrace();
           }
         }
-        try {
-          if (boiler.isPreheating() &&
-              !shouldPreheat) {
-            //TODO
-            System.out.println("Preheat should be off");
-            boiler.stopPreheating();
-          }
-        } catch (RelayException re) {
+      }
+      try {
+        if (boiler.isPreheating() &&
+            !shouldPreheat) {
           //TODO
-          re.printStackTrace();
+          System.out.println("Preheat should be off");
+          boiler.stopPreheating();
         }
-      }
-
-      //Now get latest temperatures
-      Float currentTemperature = null;
-      for (BluetoothTemperatureSensor sensor : sensors.values()) {
-        
-        if ((null == currentTemperature ||
-             sensor.getCurrentTemperature() < currentTemperature) &&
-            (null != sensor.getTempLastUpdated() &&
-             LocalDateTime.now().isAfter(sensor.getTempLastUpdated().plus(2, ChronoUnit.MINUTES))))
-          currentTemperature = sensor.getCurrentTemperature();
-      }
-      
-      if (null == currentTemperature) {
+      } catch (RelayException re) {
         //TODO
-        System.out.println("No current temperature from sensors, cannot work under these conditions");
-        return;
+        re.printStackTrace();
       }
-      //TODO
-      System.out.println("Current temperature is " + currentTemperature);
       
-      //Get a list of heating events
-      List<Event> temperatureEvents = new ArrayList<>();
+      //Now events that are "on"
+      List<Event> heatingOnEvents = new ArrayList<>();
       for (Event event : calendar.getLatestEvents()) {
-        try {
-          Float.parseFloat(event.getSummary());
-        } catch (NumberFormatException nfe) {
-          continue;
-        }
-        temperatureEvents.add(event);
+        if ("on".equals(event.getSummary().toLowerCase()))
+          heatingOnEvents.add(event);
       }
       
-      List<Event> currentTemperatureEvents = new ArrayList<>();
-      for (Event event : temperatureEvents) {
+      //Check if any of them are now
+      boolean forcedOn = false;
+      for (Event event : heatingOnEvents) {
         LocalDateTime eventStartTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
         LocalDateTime eventEndTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
         
         if (LocalDateTime.now().isAfter(eventStartTime) &&
             LocalDateTime.now().isBefore(eventEndTime)) {
-          currentTemperatureEvents.add(event);
+          forcedOn = true;
+          //TODO
+          System.out.println("Heating forced on");
+          try {
+            if (!boiler.isHeating())
+              boiler.startHeating();
+          } catch (RelayException re) {
+            //TODO
+            re.printStackTrace();
+          }
+          break;
         }
       }
-      
-      List<Event> futureTemperatureEvents = new ArrayList<>();
-      for (Event event : temperatureEvents) {
-        LocalDateTime eventStartTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
+
+      if (!forcedOn) {
+        //Now get latest temperatures
+        Float currentTemperature = null;
+        for (BluetoothTemperatureSensor sensor : sensors.values()) {
+          
+          if ((null == currentTemperature ||
+               sensor.getCurrentTemperature() < currentTemperature) &&
+              (null != sensor.getTempLastUpdated() &&
+               LocalDateTime.now().isBefore(sensor.getTempLastUpdated().plus(2, ChronoUnit.MINUTES))))
+            currentTemperature = sensor.getCurrentTemperature();
+        }
         
-        if (LocalDateTime.now().isBefore(eventStartTime)) {
-          futureTemperatureEvents.add(event);
+        if (null == currentTemperature) {
+          //TODO
+          System.out.println("No current temperature from sensors, cannot work under these conditions");
+          return;
+        }
+        //TODO
+        System.out.println("Current temperature is " + currentTemperature);
+        
+        //Get a list of heating events
+        List<Event> temperatureEvents = new ArrayList<>();
+        for (Event event : calendar.getLatestEvents()) {
+          try {
+            Float.parseFloat(event.getSummary());
+          } catch (NumberFormatException nfe) {
+            continue;
+          }
+          temperatureEvents.add(event);
+        }
+        
+        List<Event> currentTemperatureEvents = new ArrayList<>();
+        for (Event event : temperatureEvents) {
+          LocalDateTime eventStartTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
+          LocalDateTime eventEndTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
+          
+          if (LocalDateTime.now().isAfter(eventStartTime) &&
+              LocalDateTime.now().isBefore(eventEndTime)) {
+            currentTemperatureEvents.add(event);
+          }
+        }
+        
+        List<Event> futureTemperatureEvents = new ArrayList<>();
+        for (Event event : temperatureEvents) {
+          LocalDateTime eventStartTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
+          
+          if (LocalDateTime.now().isBefore(eventStartTime)) {
+            futureTemperatureEvents.add(event);
+          }
+        }
+
+        //Should we be on?
+        boolean heatingShouldBeOn = false;
+        for (Event event : currentTemperatureEvents) {
+          try {
+            float desiredTemperature = Float.parseFloat(event.getSummary());
+            if (currentTemperature < desiredTemperature &&
+                !boiler.isHeating()) {
+              heatingShouldBeOn = true;
+              break;
+            }
+          } catch (NumberFormatException | RelayException e) {
+            //TODO
+            e.printStackTrace();
+          }
+        }
+        
+        try {
+          if (!heatingShouldBeOn &&
+              boiler.isHeating()) {
+            boiler.stopHeating();
+          } else if (heatingShouldBeOn &&
+                     !boiler.isHeating())
+            boiler.startHeating();
+        } catch (RelayException re) {
+          //TODO
+          re.printStackTrace();
         }
       }
-      
-      
     }
   }
 

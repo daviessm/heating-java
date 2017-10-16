@@ -22,6 +22,11 @@ public class BluetoothTemperatureSensor {
   protected TemperatureUpdater temperatureUpdater;
   
   protected BluetoothTemperatureSensor(BluetoothDevice device) {
+    this.temperatureUpdater = new TemperatureUpdater();
+
+    if (null == device)
+      return;
+    
     this.device = device;
     this.name = this.device.getName();
     
@@ -35,8 +40,6 @@ public class BluetoothTemperatureSensor {
         this.characteristics.put(characteristic.getUUID(), characteristic);
       }
     }
-    
-    this.temperatureUpdater = new TemperatureUpdater();
   }
   
   protected void disconnect() {
@@ -71,10 +74,9 @@ public class BluetoothTemperatureSensor {
   }
   
   public static Map<String,BluetoothTemperatureSensor> scanForSensors(Map<String,BluetoothTemperatureSensor> currentDevices) {
-    if (null == currentDevices)
-      currentDevices = new HashMap<>();
+    Map<String,BluetoothTemperatureSensor> allDevices = new HashMap<>();
 
-    BluetoothManager manager = BluetoothManager.getBluetoothManager();
+    /*BluetoothManager manager = BluetoothManager.getBluetoothManager();
     LocalDateTime startedAt = LocalDateTime.now();
 
     if (manager.startDiscovery()) {   
@@ -94,11 +96,14 @@ public class BluetoothTemperatureSensor {
         if (!currentDevices.containsKey(entry.getKey())) {
           BluetoothTemperatureSensor sensor = getSensorForDevice(entry.getValue());
           if (null != sensor)
-            currentDevices.put(entry.getKey(), sensor);
+            allDevices.put(entry.getKey(), sensor);
         }
       }
     }
-    return currentDevices;
+    return currentDevices;*/
+    
+    allDevices.put("dummy", new DummyTemperatureSensor(null));
+    return allDevices;
   }
   
   public float getAmbientTemperature() throws BluetoothException {
