@@ -1,11 +1,13 @@
 package uk.me.steev.java.heating.io.temperature;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import tinyb.BluetoothDevice;
 import tinyb.BluetoothGattCharacteristic;
@@ -13,6 +15,7 @@ import tinyb.BluetoothGattService;
 import tinyb.BluetoothManager;
 
 public class BluetoothTemperatureSensor {
+  static final Logger logger = LogManager.getLogger(BluetoothTemperatureSensor.class.getName());
   protected BluetoothDevice device;
   protected String name;
   protected List<BluetoothGattService> services;
@@ -68,7 +71,7 @@ public class BluetoothTemperatureSensor {
     case "SensorTag 2.0":
       return new SensorTagSensor(device);
     default:
-      System.out.println("Unknown device " + device.getName());
+      logger.info("Unknown device " + device.getName());
       return null;
     }
   }
@@ -89,7 +92,7 @@ public class BluetoothTemperatureSensor {
         try {
           Thread.sleep(100);
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          logger.catching(Level.WARN, e);
         }
       }
       for (Entry<String, BluetoothDevice> entry : newDevices.entrySet()) {
@@ -172,8 +175,7 @@ public class BluetoothTemperatureSensor {
         currentTemperature = getAmbientTemperature();
         tempLastUpdated = LocalDateTime.now();
       } catch (BluetoothException be) {
-        //TODO
-        be.printStackTrace();
+        logger.catching(Level.WARN, be);
       }
     }
   }

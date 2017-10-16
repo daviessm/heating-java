@@ -2,14 +2,19 @@ package uk.me.steev.java.heating.io.api;
 
 import java.io.IOException;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import uk.me.steev.java.heating.controller.Heating;
 import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
 import uk.me.steev.java.heating.utils.JSONUtils;
 
 public class WeatherAdapter {
+  static final Logger logger = LogManager.getLogger(WeatherAdapter.class.getName());
   protected JSONObject latestReading;
   protected HeatingConfiguration config;
   protected TemperatureUpdater updater;
@@ -27,8 +32,7 @@ public class WeatherAdapter {
                                                      this.config.getSetting("darksky", "latlong") +
                                                      "?exclude=[minutely,hourly,daily]&units=si");
     } catch (IOException ioe) {
-      //TODO log
-      ioe.printStackTrace();
+      logger.catching(Level.WARN, ioe);
     } catch (HeatingException he) {
       throw he;
     }
@@ -85,8 +89,7 @@ public class WeatherAdapter {
       try {
         update();
       } catch (HeatingException he) {
-        //TODO
-        he.printStackTrace();
+        logger.catching(Level.ERROR, he);
       }
     }
   }

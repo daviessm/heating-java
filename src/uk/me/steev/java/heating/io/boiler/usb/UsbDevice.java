@@ -2,12 +2,15 @@ package uk.me.steev.java.heating.io.boiler.usb;
 
 import java.nio.ByteBuffer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.usb4java.Device;
 import org.usb4java.DeviceDescriptor;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 
 public class UsbDevice {
+  static final Logger logger = LogManager.getLogger(UsbDevice.class.getName());
   protected Device device;
   protected DeviceDescriptor descriptor;
   protected DeviceHandle handle;
@@ -33,7 +36,7 @@ public class UsbDevice {
     buffer.put(data);
     int ret = LibUsb.controlTransfer(this.handle, (byte)0x21, (byte)0x09, (short)768, (short)0, buffer, 1000);
     if (ret < 0) {
-      System.out.println(LibUsb.errorName(ret));
+      logger.error(LibUsb.errorName(ret));
       throw new UsbException("Unable to send control transfer message for device " + this.device);
     }
   }

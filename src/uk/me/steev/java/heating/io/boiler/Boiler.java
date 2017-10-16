@@ -1,8 +1,10 @@
 package uk.me.steev.java.heating.io.boiler;
 
-import uk.me.steev.java.heating.io.boiler.usb.UsbUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Boiler {
+  static final Logger logger = LogManager.getLogger(Boiler.class.getName());
   protected Relay heatingRelay;
   protected Relay preheatRelay;
 
@@ -33,31 +35,5 @@ public class Boiler {
 
   public boolean isPreheating() throws RelayException {
     return preheatRelay.isOn();
-  }
-
-  public static void main(String[] args) {
-    UsbUtils.deinit();
-    Relay heatingRelay = null;
-    Relay preheatRelay = null;
-    try {
-      heatingRelay = Relay.findRelay(RelayTypes.USB_1, new String[] { "3", "14" });
-      preheatRelay = Relay.findRelay(RelayTypes.USB_1, new String[] { "3", "14" });
-      Boiler b = new Boiler(heatingRelay, preheatRelay);
-      try {
-        b.startHeating();
-        Thread.sleep(1000);
-        b.startHeating();
-        Thread.sleep(1000);
-        b.stopHeating();
-        Thread.sleep(1000);
-        b.stopHeating();
-      } catch (InterruptedException ie) {
-        ie.printStackTrace();
-      }
-    } catch (RelayException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    UsbUtils.deinit();
   }
 }

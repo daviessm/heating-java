@@ -17,6 +17,10 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.api.services.calendar.model.Event;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+
 import uk.me.steev.java.heating.io.api.CalendarAdapter;
 import uk.me.steev.java.heating.io.api.WeatherAdapter;
 import uk.me.steev.java.heating.io.boiler.Boiler;
@@ -26,6 +30,7 @@ import uk.me.steev.java.heating.io.boiler.RelayTypes;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 
 public class Heating {
+  static final Logger logger = LogManager.getLogger(Heating.class.getName());
   protected HeatingConfiguration config;
   protected Boiler boiler;
   protected WeatherAdapter weather;
@@ -164,27 +169,23 @@ public class Heating {
         if (LocalDateTime.now().isAfter(eventStartTime) &&
             LocalDateTime.now().isBefore(eventEndTime)) {
           shouldPreheat = true;
-          //TODO
-          System.out.println("Preheat should be on");
+          logger.info("Preheat should be on");
           try {
             if (!boiler.isPreheating())
               boiler.startPreheating();
           } catch (RelayException re) {
-            //TODO
-            re.printStackTrace();
+            logger.catching(Level.ERROR, re);
           }
         }
       }
       try {
         if (boiler.isPreheating() &&
             !shouldPreheat) {
-          //TODO
-          System.out.println("Preheat should be off");
+          logger.info("Preheat should be off");
           boiler.stopPreheating();
         }
       } catch (RelayException re) {
-        //TODO
-        re.printStackTrace();
+        logger.catching(Level.ERROR, re);
       }
       
       //Now events that are "on"
@@ -203,14 +204,12 @@ public class Heating {
         if (LocalDateTime.now().isAfter(eventStartTime) &&
             LocalDateTime.now().isBefore(eventEndTime)) {
           forcedOn = true;
-          //TODO
-          System.out.println("Heating forced on");
+          logger.info("Heating forced on");
           try {
             if (!boiler.isHeating())
               boiler.startHeating();
           } catch (RelayException re) {
-            //TODO
-            re.printStackTrace();
+            logger.catching(Level.ERROR, re);
           }
           break;
         }
@@ -229,12 +228,10 @@ public class Heating {
         }
         
         if (null == currentTemperature) {
-          //TODO
-          System.out.println("No current temperature from sensors, cannot work under these conditions");
+          logger.warn("No current temperature from sensors, cannot work under these conditions");
           return;
         }
-        //TODO
-        System.out.println("Current temperature is " + currentTemperature);
+        logger.debug("Current temperature is " + currentTemperature);
         
         //Get a list of heating events
         List<Event> temperatureEvents = new ArrayList<>();
@@ -278,8 +275,7 @@ public class Heating {
               break;
             }
           } catch (NumberFormatException | RelayException e) {
-            //TODO
-            e.printStackTrace();
+            logger.catching(Level.ERROR, e);
           }
         }
         
@@ -291,8 +287,7 @@ public class Heating {
                      !boiler.isHeating())
             boiler.startHeating();
         } catch (RelayException re) {
-          //TODO
-          re.printStackTrace();
+          logger.catching(Level.ERROR, re);
         }
       }
     }
@@ -303,7 +298,6 @@ public class Heating {
       Heating heating = new Heating();
       heating.start();
     } catch (HeatingException he) {
-      //TODO logging
       he.printStackTrace();
     }
   }

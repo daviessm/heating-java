@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -25,6 +29,7 @@ import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
 
 public class CalendarAdapter {
+  static final Logger logger = LogManager.getLogger(CalendarAdapter.class.getName());
   protected HeatingConfiguration config;
   protected Calendar calendar;
   protected List<Event> latestEvents;
@@ -144,8 +149,7 @@ public class CalendarAdapter {
       try {
         latestEvents = getEvents();
       } catch (IOException | HeatingException e) {
-        //TODO
-        e.printStackTrace();
+        logger.catching(Level.WARN, e);
       }
     }
   }

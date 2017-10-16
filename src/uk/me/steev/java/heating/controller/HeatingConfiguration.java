@@ -27,7 +27,6 @@ public class HeatingConfiguration {
     try {
       HeatingConfiguration.CONFIGURATION = JSONUtils.readJsonFromFile(configurationLocation);
     } catch (JSONException jsone) {
-      //TODO logging
       throw new HeatingException("Cannot get configuration", jsone);
     } catch (IOException ioe) {
       throw new HeatingException("Cannot get configuration", ioe);

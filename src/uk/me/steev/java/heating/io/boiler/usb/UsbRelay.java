@@ -4,9 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import uk.me.steev.java.heating.io.boiler.Relay;
 
 public class UsbRelay extends Relay {
+  static final Logger logger = LogManager.getLogger(UsbRelay.class.getName());
   protected UsbDevice device;
   protected boolean on = false;
   
@@ -44,21 +49,21 @@ public class UsbRelay extends Relay {
         relays.put(device.getPhysicalLocation(), new UsbRelay(device));
       }
     } catch (UsbException ue) {
-      ue.printStackTrace();
+      logger.catching(Level.ERROR, ue);
     }
     return relays;
   }
 
   protected UsbRelay(UsbDevice device) {
     this.device = device;
+    this.off();
   }
   
   public void on() {
     try {
       this.device.controlTransfer(new byte[]{(byte)0xFE, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00});
     } catch (UsbException ue) {
-      //TODO handle this
-      ue.printStackTrace();
+      logger.catching(Level.ERROR, ue);
     }
     this.on = true;
   }
@@ -67,8 +72,7 @@ public class UsbRelay extends Relay {
     try {
       this.device.controlTransfer(new byte[]{(byte)0xFC, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00});
     } catch (UsbException ue) {
-      //TODO handle this
-      ue.printStackTrace();
+      logger.catching(Level.ERROR, ue);
     }
     this.on = false;
   }
