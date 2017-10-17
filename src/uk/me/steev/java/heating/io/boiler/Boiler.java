@@ -14,18 +14,22 @@ public class Boiler {
   }
 
   public void startHeating() throws RelayException {
+    logger.info("Heating on");
     this.heatingRelay.on();
   }
 
   public void stopHeating() throws RelayException {
+    logger.info("Heating off");
     this.heatingRelay.off();
   }
 
   public void startPreheating() throws RelayException {
+    logger.info("Preheating on");
     this.preheatRelay.on();
   }
 
   public void stopPreheating() throws RelayException {
+    logger.info("Preheating off");
     this.preheatRelay.off();
   }
 

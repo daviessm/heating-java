@@ -60,6 +60,7 @@ public class UsbRelay extends Relay {
   }
   
   public void on() {
+    logger.trace("Relay ON: " + this.toString());
     try {
       this.device.controlTransfer(new byte[]{(byte)0xFE, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00});
     } catch (UsbException ue) {
@@ -69,6 +70,7 @@ public class UsbRelay extends Relay {
   }
   
   public void off() {
+    logger.trace("Relay OFF: " + this.toString());
     try {
       this.device.controlTransfer(new byte[]{(byte)0xFC, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00});
     } catch (UsbException ue) {
@@ -79,5 +81,9 @@ public class UsbRelay extends Relay {
   
   public boolean isOn() {
     return on;
+  }
+  
+  public String toString() {
+    return device.getPhysicalLocation().toString();
   }
 }

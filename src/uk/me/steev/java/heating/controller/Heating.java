@@ -7,10 +7,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +57,7 @@ public class Heating {
       this.calendar = new CalendarAdapter(this.config);
       
       //Set up an empty set of temperature sensors
-      this.sensors = new HashMap<>();
+      this.sensors = new ConcurrentHashMap<>();
       
       //Set up a thing to run other things periodically
       this.scheduledExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(10);
@@ -218,13 +218,19 @@ public class Heating {
       if (!forcedOn) {
         //Now get latest temperatures
         Float currentTemperature = null;
-        for (BluetoothTemperatureSensor sensor : sensors.values()) {
-          
+        for (Entry<String,BluetoothTemperatureSensor> entry : sensors.entrySet()) {
           if ((null == currentTemperature ||
-               sensor.getCurrentTemperature() < currentTemperature) &&
-              (null != sensor.getTempLastUpdated() &&
-               LocalDateTime.now().isBefore(sensor.getTempLastUpdated().plus(2, ChronoUnit.MINUTES))))
-            currentTemperature = sensor.getCurrentTemperature();
+               entry.getValue().getCurrentTemperature() < currentTemperature)) {
+            if  (null != entry.getValue().getTempLastUpdated()) {
+              if (LocalDateTime.now().isBefore(entry.getValue().getTempLastUpdated().plus(2, ChronoUnit.MINUTES))) {
+                currentTemperature = entry.getValue().getCurrentTemperature();
+              } else {
+                logger.warn("Sensor time for " + entry.getValue().toString() + " is more than two minutes old, disconnecting");
+                entry.getValue().disconnect();
+                sensors.remove(entry);
+              }
+            }
+          }
         }
         
         if (null == currentTemperature) {
@@ -271,6 +277,8 @@ public class Heating {
             float desiredTemperature = Float.parseFloat(event.getSummary());
             if (currentTemperature < desiredTemperature &&
                 !boiler.isHeating()) {
+              logger.info("Boiler should be on because current temperature " + currentTemperature +
+                          " is lower than desired temperature " + desiredTemperature);
               heatingShouldBeOn = true;
               break;
             }
@@ -284,8 +292,9 @@ public class Heating {
               boiler.isHeating()) {
             boiler.stopHeating();
           } else if (heatingShouldBeOn &&
-                     !boiler.isHeating())
+                     !boiler.isHeating()) {
             boiler.startHeating();
+          }
         } catch (RelayException re) {
           logger.catching(Level.ERROR, re);
         }

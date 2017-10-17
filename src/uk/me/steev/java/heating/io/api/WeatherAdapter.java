@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import uk.me.steev.java.heating.controller.Heating;
 import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
 import uk.me.steev.java.heating.utils.JSONUtils;
@@ -31,6 +30,7 @@ public class WeatherAdapter {
                                                      "/" + 
                                                      this.config.getSetting("darksky", "latlong") +
                                                      "?exclude=[minutely,hourly,daily]&units=si");
+      logger.trace("Got response from DarkSky API: " + this.latestReading.toString());
     } catch (IOException ioe) {
       logger.catching(Level.WARN, ioe);
     } catch (HeatingException he) {

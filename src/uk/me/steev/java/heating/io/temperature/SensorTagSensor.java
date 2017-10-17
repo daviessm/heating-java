@@ -9,11 +9,11 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
   }
   
   public float getAmbientTemperature() throws BluetoothException {
-    //Red LED on
+    logger.trace("Red LED on for " + this.toString());
     this.writeToUuid("f000aa65-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
     this.writeToUuid("f000aa66-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
     
-    //Temperature sensor on
+    logger.trace("Temperature sensor on for " + this.toString());
     this.writeToUuid("f000aa02-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
     
     for (int x = 0; x < 4; x++) {
@@ -30,11 +30,11 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
         float objectTempCelsius = objectTempRaw / 128f;
         float ambientTempCelsius = ambientTempRaw / 128f;
         
-        //Red LED off
+        logger.trace("Red LED off for " + this.toString());
         this.writeToUuid("f000aa65-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
         this.writeToUuid("f000aa66-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
         
-        //Temperature sensor off
+        logger.trace("Temperature sensor off for " + this.toString());
         this.writeToUuid("f000aa02-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
 
         return ambientTempCelsius;

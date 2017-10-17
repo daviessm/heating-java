@@ -45,7 +45,8 @@ public class BluetoothTemperatureSensor {
     }
   }
   
-  protected void disconnect() {
+  public void disconnect() {
+    logger.warn("Disconnecting from " + this.toString());
     device.disconnect();
   }
   
@@ -110,6 +111,7 @@ public class BluetoothTemperatureSensor {
   }
   
   public float getAmbientTemperature() throws BluetoothException {
+    logger.debug("Getting temperature for " + this.toString());
     return 0f;
   }
 
@@ -167,6 +169,10 @@ public class BluetoothTemperatureSensor {
 
   public void setTemperatureUpdater(TemperatureUpdater temperatureUpdater) {
     this.temperatureUpdater = temperatureUpdater;
+  }
+  
+  public String toString() {
+    return this.device.getName() + " at " + this.device.getAddress();
   }
 
   public class TemperatureUpdater implements Runnable {

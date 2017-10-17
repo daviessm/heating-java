@@ -74,7 +74,8 @@ public class CalendarAdapter {
     
     List<String> redirectURLs = new ArrayList<String>();
     redirectURLs.add("urn:ietf:wg:oauth:2.0:oob");
-    // Load client secrets.
+    
+    logger.trace("Loading client secrets");
     GoogleClientSecrets clientSecrets = new GoogleClientSecrets()
       .setInstalled(new GoogleClientSecrets.Details()
         .setClientId(config.getSetting("calendar", "client_id"))
@@ -83,16 +84,18 @@ public class CalendarAdapter {
         .setRedirectUris(redirectURLs)
         .setAuthUri("https://accounts.google.com/o/oauth2/auth"));
 
-      // Build flow and trigger user authorisation request.
+      logger.trace("Build flow");
       GoogleAuthorizationCodeFlow flow =
               new GoogleAuthorizationCodeFlow.Builder(
                       HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
               .setDataStoreFactory(DATA_STORE_FACTORY)
               .setAccessType("offline")
               .build();
+      logger.trace("Trigger user authorisation request");
       Credential credential = new AuthorizationCodeInstalledApp(
           flow, new LocalServerReceiver()).authorize("user");
       
+      logger.trace("Make calendar object");
       this.calendar = new com.google.api.services.calendar.Calendar.Builder(
           HTTP_TRANSPORT, JSON_FACTORY, credential)
           .setApplicationName("heating-java")
@@ -102,6 +105,7 @@ public class CalendarAdapter {
   public List<Event> getEvents() throws IOException, HeatingException {
     DateTime now = new DateTime(System.currentTimeMillis());
     
+    logger.debug("Getting calendar events");
     Events events = calendar.events().list(config.getSetting("calendar", "calendar_id"))
         .setMaxResults(10)
         .setTimeMin(now)
