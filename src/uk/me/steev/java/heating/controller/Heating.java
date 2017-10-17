@@ -27,6 +27,7 @@ import uk.me.steev.java.heating.io.boiler.Boiler;
 import uk.me.steev.java.heating.io.boiler.Relay;
 import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.boiler.RelayTypes;
+import uk.me.steev.java.heating.io.http.HttpAdapter;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 
 public class Heating {
@@ -39,6 +40,7 @@ public class Heating {
   protected ScheduledThreadPoolExecutor scheduledExecutor;
   protected SensorScanner scanner;
   protected HeatingProcessor processor;
+  protected HttpAdapter httpAdapter;
   
   public Heating(File configFile) throws HeatingException {
     try {
@@ -64,6 +66,8 @@ public class Heating {
       
       this.scanner = new SensorScanner();
       this.processor = new HeatingProcessor();
+      
+      this.httpAdapter = HttpAdapter.getHttpAdapter(this);
     } catch (RelayException | IOException e) {
       throw new HeatingException("Error creating Heating object", e);
     }
