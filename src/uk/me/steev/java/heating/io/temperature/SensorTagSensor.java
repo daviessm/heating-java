@@ -8,7 +8,7 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
     super(device);
   }
   
-  public float getAmbientTemperature() throws BluetoothException {
+  protected float getAmbientTemperature() throws BluetoothException {
     logger.trace("Red LED on for " + this.toString());
     this.writeToUuid("f000aa65-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
     this.writeToUuid("f000aa66-0451-4000-b000-000000000000", new byte[]{(byte)0x01});

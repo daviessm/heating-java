@@ -23,7 +23,7 @@ public class WeatherAdapter {
     this.updater = new TemperatureUpdater();
   }
   
-  public void update() throws HeatingException {
+  protected void update() throws HeatingException {
     try {
       this.latestReading = JSONUtils.readJsonFromUrl("https://api.darksky.net/forecast/" +
                                                      this.config.getSetting("darksky", "api_key") + 

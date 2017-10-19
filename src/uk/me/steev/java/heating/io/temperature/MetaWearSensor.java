@@ -20,7 +20,7 @@ public class MetaWearSensor extends BluetoothTemperatureSensor {
     super(device);
   }
   
-  public float getAmbientTemperature() throws BluetoothException {
+  protected float getAmbientTemperature() throws BluetoothException {
     logger.trace("RED_LED_ON_1 for " + this.toString());
     this.writeToUuid("326a9001-85cb-9195-d9dd-464cfbbae75a", RED_LED_ON_1);
     logger.trace("RED_LED_ON_2 for " + this.toString());

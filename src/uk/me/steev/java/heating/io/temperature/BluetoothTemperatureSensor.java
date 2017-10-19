@@ -110,8 +110,8 @@ public class BluetoothTemperatureSensor {
     return allDevices;
   }
   
-  public float getAmbientTemperature() throws BluetoothException {
-    logger.debug("Getting temperature for " + this.toString());
+  protected float getAmbientTemperature() throws BluetoothException {
+    logger.warn("Getting temperature for superclass!");
     return 0f;
   }
 
