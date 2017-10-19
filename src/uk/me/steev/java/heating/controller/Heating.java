@@ -41,6 +41,7 @@ public class Heating {
   protected SensorScanner scanner;
   protected HeatingProcessor processor;
   protected HttpAdapter httpAdapter;
+  protected Float desiredTemperature;
   
   public Heating(File configFile) throws HeatingException {
     try {
@@ -139,6 +140,38 @@ public class Heating {
     this.scheduledExecutor = scheduledExecutor;
   }
   
+  public SensorScanner getScanner() {
+    return scanner;
+  }
+
+  public void setScanner(SensorScanner scanner) {
+    this.scanner = scanner;
+  }
+
+  public HeatingProcessor getProcessor() {
+    return processor;
+  }
+
+  public void setProcessor(HeatingProcessor processor) {
+    this.processor = processor;
+  }
+
+  public HttpAdapter getHttpAdapter() {
+    return httpAdapter;
+  }
+
+  public void setHttpAdapter(HttpAdapter httpAdapter) {
+    this.httpAdapter = httpAdapter;
+  }
+
+  public Float getDesiredTemperature() {
+    return desiredTemperature;
+  }
+
+  public void setDesiredTemperature(Float desiredTemperature) {
+    this.desiredTemperature = desiredTemperature;
+  }
+
   public class SensorScanner implements Runnable {
     public void run() {
       Map<String,BluetoothTemperatureSensor> newDevices = BluetoothTemperatureSensor.scanForSensors(sensors);

@@ -1,9 +1,13 @@
 package uk.me.steev.java.heating.io.api;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -22,6 +26,8 @@ import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.Calendar.Events.Watch;
+import com.google.api.services.calendar.model.Channel;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 
@@ -34,6 +40,7 @@ public class CalendarAdapter {
   protected Calendar calendar;
   protected List<Event> latestEvents;
   protected EventsUpdater eventsUpdater;
+  protected UUID uuid;
 
   /** Directory to store user credentials for this application. */
   private static final java.io.File DATA_STORE_DIR = new java.io.File(
@@ -72,6 +79,8 @@ public class CalendarAdapter {
     latestEvents = new ArrayList<Event>(10);
     eventsUpdater = new EventsUpdater();
     
+    this.uuid = UUID.randomUUID();
+
     List<String> redirectURLs = new ArrayList<String>();
     redirectURLs.add("urn:ietf:wg:oauth:2.0:oob");
     
@@ -105,15 +114,37 @@ public class CalendarAdapter {
   public List<Event> getEvents() throws IOException, HeatingException {
     DateTime now = new DateTime(System.currentTimeMillis());
     
-    logger.debug("Getting calendar events");
-    Events events = calendar.events().list(config.getSetting("calendar", "calendar_id"))
+    String calendarId = config.getSetting("calendar", "calendar_id");
+    String refreshAddress = config.getSetting("calendar", "refresh_address");
+    
+    logger.debug("Getting calendar events for calendar " + calendarId);
+    Events events = calendar.events().list(calendarId)
         .setMaxResults(10)
         .setTimeMin(now)
         .setOrderBy("startTime")
         .setSingleEvents(true)
         .execute();
     
+    Channel channel = new Channel();
+    channel.setId(uuid.toString());
+    channel.setExpiration(LocalDateTime.now().plus(6, ChronoUnit.HOURS).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+    channel.setAddress(refreshAddress);
+    channel.setType("web_hook");
+    Watch watch = calendar.events().watch(calendarId, channel);
+    watch.execute();
     return events.getItems();
+  }
+  
+  public void stopWatching(String channelId, String resourceId) {
+    Channel channel = new Channel();
+    channel.setId(channelId);
+    channel.setResourceId(resourceId);
+    
+    try {
+      calendar.channels().stop(channel).execute();
+    } catch (IOException ioe) {
+      logger.catching(ioe);
+    }
   }
   
   public HeatingConfiguration getConfig() {
@@ -146,6 +177,14 @@ public class CalendarAdapter {
 
   public void setEventsUpdater(EventsUpdater eventsUpdater) {
     this.eventsUpdater = eventsUpdater;
+  }
+
+  public UUID getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(UUID uuid) {
+    this.uuid = uuid;
   }
 
   public class EventsUpdater implements Runnable {
