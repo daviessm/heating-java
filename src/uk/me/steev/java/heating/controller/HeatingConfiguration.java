@@ -33,9 +33,17 @@ public class HeatingConfiguration {
     }
   }
   
-  public String getSetting(String category, String setting) throws HeatingException {
+  public String getStringSetting(String category, String setting) throws HeatingException {
     try {
       return CONFIGURATION.getJSONObject(category).getString(setting);
+    } catch (JSONException jsone) {
+      throw new HeatingException(category + "." + setting + " not found", jsone);
+    }
+  }
+
+  public int getIntegerSetting(String category, String setting) throws HeatingException {
+    try {
+      return CONFIGURATION.getJSONObject(category).getInt(setting);
     } catch (JSONException jsone) {
       throw new HeatingException(category + "." + setting + " not found", jsone);
     }
