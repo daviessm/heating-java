@@ -1,9 +1,10 @@
 package uk.me.steev.java.heating.io.api;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +43,7 @@ public class CalendarAdapter {
   protected EventsUpdater eventsUpdater;
   protected UUID uuid;
   protected String resourceId;
+  protected TemporalAmount updateInterval;
 
   /** Directory to store user credentials for this application. */
   private static final java.io.File DATA_STORE_DIR = new java.io.File(
@@ -80,14 +82,21 @@ public class CalendarAdapter {
     latestEvents = new ArrayList<Event>(10);
     eventsUpdater = new EventsUpdater();
     
+    try {
+      int intervalSeconds = config.getIntegerSetting("calendar", "update_calendar_interval_seconds");
+      updateInterval = Duration.ofSeconds(intervalSeconds);
+    } catch (HeatingException he) {
+      logger.catching(Level.FATAL, he);
+    }
+    
     List<String> redirectURLs = new ArrayList<String>();
     redirectURLs.add("urn:ietf:wg:oauth:2.0:oob");
     
     logger.trace("Loading client secrets");
     GoogleClientSecrets clientSecrets = new GoogleClientSecrets()
       .setInstalled(new GoogleClientSecrets.Details()
-        .setClientId(config.getSetting("calendar", "client_id"))
-        .setClientSecret(config.getSetting("calendar", "client_secret"))
+        .setClientId(config.getStringSetting("calendar", "client_id"))
+        .setClientSecret(config.getStringSetting("calendar", "client_secret"))
         .setTokenUri("https://accounts.google.com/o/oauth2/token")
         .setRedirectUris(redirectURLs)
         .setAuthUri("https://accounts.google.com/o/oauth2/auth"));
@@ -113,8 +122,8 @@ public class CalendarAdapter {
   public List<Event> getEvents() throws IOException, HeatingException {
     DateTime now = new DateTime(System.currentTimeMillis());
     
-    String calendarId = config.getSetting("calendar", "calendar_id");
-    String refreshAddress = config.getSetting("calendar", "refresh_address");
+    String calendarId = config.getStringSetting("calendar", "calendar_id");
+    String refreshAddress = config.getStringSetting("calendar", "refresh_address");
     
     if (!(null == this.uuid) &&
         !(null == this.resourceId)) {
@@ -133,7 +142,7 @@ public class CalendarAdapter {
     
     Channel channel = new Channel();
     channel.setId(uuid.toString());
-    channel.setExpiration(LocalDateTime.now().plus(6, ChronoUnit.HOURS).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+    channel.setExpiration(LocalDateTime.now().plus(updateInterval).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
     channel.setAddress(refreshAddress);
     channel.setType("web_hook");
     Watch watch = calendar.events().watch(calendarId, channel);
