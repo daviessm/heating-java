@@ -41,6 +41,7 @@ public class CalendarAdapter {
   protected List<Event> latestEvents;
   protected EventsUpdater eventsUpdater;
   protected UUID uuid;
+  protected String resourceId;
 
   /** Directory to store user credentials for this application. */
   private static final java.io.File DATA_STORE_DIR = new java.io.File(
@@ -79,8 +80,6 @@ public class CalendarAdapter {
     latestEvents = new ArrayList<Event>(10);
     eventsUpdater = new EventsUpdater();
     
-    this.uuid = UUID.randomUUID();
-
     List<String> redirectURLs = new ArrayList<String>();
     redirectURLs.add("urn:ietf:wg:oauth:2.0:oob");
     
@@ -117,6 +116,13 @@ public class CalendarAdapter {
     String calendarId = config.getSetting("calendar", "calendar_id");
     String refreshAddress = config.getSetting("calendar", "refresh_address");
     
+    if (!(null == this.uuid) &&
+        !(null == this.resourceId)) {
+      stopWatching(uuid.toString(), resourceId);
+    }
+    
+    this.uuid = UUID.randomUUID();
+
     logger.debug("Getting calendar events for calendar " + calendarId);
     Events events = calendar.events().list(calendarId)
         .setMaxResults(10)
@@ -185,6 +191,14 @@ public class CalendarAdapter {
 
   public void setUuid(UUID uuid) {
     this.uuid = uuid;
+  }
+
+  public String getResourceId() {
+    return resourceId;
+  }
+
+  public void setResourceId(String resourceId) {
+    this.resourceId = resourceId;
   }
 
   public class EventsUpdater implements Runnable {

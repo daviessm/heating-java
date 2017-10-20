@@ -22,8 +22,8 @@ public class RefreshServlet extends HeatingServlet {
     String pathInfo = request.getPathInfo().replaceFirst("/", "");
     switch(pathInfo) {
     case "events":
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
       if (!("sync".equals(request.getHeader("X-Goog-Resource-State")))) {
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         if (heating.getCalendar().getUuid().toString().equals(request.getHeader("X-Goog-Channel-ID"))) {
           logger.info("Getting latest events");
           heating.getCalendar().getLatestEvents();
@@ -33,6 +33,10 @@ public class RefreshServlet extends HeatingServlet {
           logger.info("Stop watching " + channelId + " " + resourceId);
           heating.getCalendar().stopWatching(channelId, resourceId);
         }
+      } else {
+        String resourceId = request.getHeader("X-Goog-Resource-ID");
+        logger.debug("Setting calender resource string to " + resourceId);
+        heating.getCalendar().setResourceId(resourceId);
       }
       break;
     default:
