@@ -1,9 +1,12 @@
 package uk.me.steev.java.heating.io.temperature;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ScheduledFuture;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -20,11 +23,12 @@ public class BluetoothTemperatureSensor {
   protected String name;
   protected List<BluetoothGattService> services;
   protected Map<String, BluetoothGattCharacteristic> characteristics;
-  protected float currentTemperature;
+  protected Float currentTemperature;
   protected LocalDateTime tempLastUpdated;
   protected TemperatureUpdater temperatureUpdater;
+  protected ScheduledFuture<?> temperatureUpdatdaterFuture;
   
-  protected BluetoothTemperatureSensor(BluetoothDevice device) {
+  protected BluetoothTemperatureSensor(BluetoothDevice device) throws BluetoothException {
     this.temperatureUpdater = new TemperatureUpdater();
 
     if (null == device)
@@ -33,15 +37,19 @@ public class BluetoothTemperatureSensor {
     this.device = device;
     this.name = this.device.getName();
     
-    this.device.connect();
-    this.services = this.device.getServices();
-
-    this.characteristics = new HashMap<String, BluetoothGattCharacteristic>();
-    for (BluetoothGattService service : this.services) {
-      List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
-      for (BluetoothGattCharacteristic characteristic : characteristics) {
-        this.characteristics.put(characteristic.getUUID(), characteristic);
+    try {
+      this.device.connect();
+      this.services = this.device.getServices();
+  
+      this.characteristics = new HashMap<String, BluetoothGattCharacteristic>();
+      for (BluetoothGattService service : this.services) {
+        List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
+        for (BluetoothGattCharacteristic characteristic : characteristics) {
+          this.characteristics.put(characteristic.getUUID(), characteristic);
+        }
       }
+    } catch (tinyb.BluetoothException bte) {
+      throw new BluetoothException("Unable to instantiate object " + this.name + " at " + this.device.getAddress(), bte);
     }
   }
   
@@ -52,7 +60,11 @@ public class BluetoothTemperatureSensor {
   
   protected void writeToUuid(String uuid, byte[] data) throws BluetoothException {
     if (this.characteristics.containsKey(uuid)) {
-      this.characteristics.get(uuid).writeValue(data);
+      try {
+        this.characteristics.get(uuid).writeValue(data);
+      } catch (tinyb.BluetoothException bte) {
+        throw new BluetoothException("Unable to write to UUID", bte);
+      }
     } else {
       throw new BluetoothException("Unable to find characteristic " + uuid + " to write to");
     }
@@ -60,34 +72,47 @@ public class BluetoothTemperatureSensor {
   
   protected byte[] readFromUuid(String uuid) throws BluetoothException {
     if (this.characteristics.containsKey(uuid)) {
-      return this.characteristics.get(uuid).readValue();
+      try {
+        return this.characteristics.get(uuid).readValue();
+      } catch (tinyb.BluetoothException bte) {
+        throw new BluetoothException("Unable to write to UUID", bte);
+      }
     }
     throw new BluetoothException("Unable to find characteristic " + uuid + " to read from");
   }
   
   private static BluetoothTemperatureSensor getSensorForDevice(BluetoothDevice device) {
-    switch(device.getName()) {
-    case "MetaWear":
-      return new MetaWearSensor(device);
-    case "SensorTag 2.0":
-      return new SensorTagSensor(device);
-    default:
-      logger.info("Unknown device " + device.getName());
-      return null;
+    BluetoothTemperatureSensor sensor = null;
+    try {
+      switch(device.getName()) {
+      case "MetaWear":
+        sensor = new MetaWearSensor(device);
+        break;
+      case "CC2650 SensorTag":
+      case "SensorTag 2.0":
+        sensor = new SensorTagSensor(device);
+        break;
+      default:
+        logger.info("Unknown device " + device.getName());
+      }
+    } catch (BluetoothException bte) {
+      logger.catching(Level.WARN, bte);
+      sensor = null;
     }
+    return sensor;
   }
   
-  public static Map<String,BluetoothTemperatureSensor> scanForSensors(Map<String,BluetoothTemperatureSensor> currentDevices) {
-    Map<String,BluetoothTemperatureSensor> allDevices = new HashMap<>();
+  public static Map<String,BluetoothTemperatureSensor> scanForSensors() {
+    Map<String,BluetoothTemperatureSensor> newSensors = new HashMap<>();
 
-    /*BluetoothManager manager = BluetoothManager.getBluetoothManager();
+    BluetoothManager manager = BluetoothManager.getBluetoothManager();
     LocalDateTime startedAt = LocalDateTime.now();
 
+    logger.debug("Start scanning for devices");
     if (manager.startDiscovery()) {   
       Map<String,BluetoothDevice> newDevices = new HashMap<>();
-      System.out.println("Started discovery");
-      while(startedAt.plus(10, ChronoUnit.SECONDS).isAfter(LocalDateTime.now())){
-        for(BluetoothDevice device : manager.getDevices()){
+      while (startedAt.plus(10, ChronoUnit.SECONDS).isAfter(LocalDateTime.now())) {
+        for (BluetoothDevice device : manager.getDevices()) {
           newDevices.put(device.getAddress(), device);
         }
         try {
@@ -96,18 +121,20 @@ public class BluetoothTemperatureSensor {
           logger.catching(Level.WARN, e);
         }
       }
+      logger.debug("Stop scanning for devices");
+      manager.stopDiscovery();
+
       for (Entry<String, BluetoothDevice> entry : newDevices.entrySet()) {
-        if (!currentDevices.containsKey(entry.getKey())) {
-          BluetoothTemperatureSensor sensor = getSensorForDevice(entry.getValue());
-          if (null != sensor)
-            allDevices.put(entry.getKey(), sensor);
+        BluetoothTemperatureSensor sensor = getSensorForDevice(entry.getValue());
+        if (null != sensor) {
+          logger.info("Found device " + sensor.getName() + " at " + entry.getKey());
+          newSensors.put(entry.getKey(), sensor);
         }
       }
     }
-    return currentDevices;*/
     
-    allDevices.put("dummy", new DummyTemperatureSensor(null));
-    return allDevices;
+    //allDevices.put("dummy", new DummyTemperatureSensor(null));
+    return newSensors;
   }
   
   protected float getAmbientTemperature() throws BluetoothException {
@@ -147,11 +174,11 @@ public class BluetoothTemperatureSensor {
     this.characteristics = characteristics;
   }
 
-  public float getCurrentTemperature() {
+  public Float getCurrentTemperature() {
     return currentTemperature;
   }
 
-  public void setCurrentTemperature(float currentTemperature) {
+  public void setCurrentTemperature(Float currentTemperature) {
     this.currentTemperature = currentTemperature;
   }
 
@@ -171,6 +198,14 @@ public class BluetoothTemperatureSensor {
     this.temperatureUpdater = temperatureUpdater;
   }
   
+  public ScheduledFuture<?> getTemperatureUpdatdaterFuture() {
+    return temperatureUpdatdaterFuture;
+  }
+
+  public void setTemperatureUpdatdaterFuture(ScheduledFuture<?> temperatureUpdatdaterFuture) {
+    this.temperatureUpdatdaterFuture = temperatureUpdatdaterFuture;
+  }
+
   public String toString() {
     return this.device.getName() + " at " + this.device.getAddress();
   }
@@ -178,10 +213,17 @@ public class BluetoothTemperatureSensor {
   public class TemperatureUpdater implements Runnable {
     public void run() {
       try {
-        currentTemperature = getAmbientTemperature();
-        tempLastUpdated = LocalDateTime.now();
-      } catch (BluetoothException be) {
-        logger.catching(Level.WARN, be);
+        try {
+          currentTemperature = getAmbientTemperature();
+          tempLastUpdated = LocalDateTime.now();
+          logger.info("Got temperature " + currentTemperature + " for device " + device.getAddress());
+        } catch (BluetoothException be) {
+          logger.catching(Level.WARN, be);
+          disconnect();
+          getTemperatureUpdatdaterFuture().cancel(false);
+        }
+      } catch (Throwable t) {
+        logger.catching(Level.ERROR, t);
       }
     }
   }

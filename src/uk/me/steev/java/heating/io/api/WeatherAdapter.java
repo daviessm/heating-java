@@ -33,8 +33,6 @@ public class WeatherAdapter {
       logger.trace("Got response from DarkSky API: " + this.latestReading.toString());
     } catch (IOException ioe) {
       logger.catching(Level.WARN, ioe);
-    } catch (HeatingException he) {
-      throw he;
     }
   }
   

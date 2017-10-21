@@ -4,7 +4,7 @@ import tinyb.BluetoothDevice;
 
 public class SensorTagSensor extends BluetoothTemperatureSensor {
 
-  public SensorTagSensor(BluetoothDevice device) {
+  public SensorTagSensor(BluetoothDevice device) throws BluetoothException {
     super(device);
   }
   
@@ -18,7 +18,7 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
     
     for (int x = 0; x < 4; x++) {
       try {
-        Thread.sleep(200);
+        Thread.sleep(25);
         byte[] result = this.readFromUuid("f000aa01-0451-4000-b000-000000000000");
   
         int objectTempRaw = (result[0] & 0xff) | (result[1] << 8);
@@ -30,7 +30,7 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
         float objectTempCelsius = objectTempRaw / 128f;
         float ambientTempCelsius = ambientTempRaw / 128f;
         
-        logger.trace("Red LED off for " + this.toString());
+        logger.trace("Red LED off for " + this.toString() + " after " + x + " iterations");
         this.writeToUuid("f000aa65-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
         this.writeToUuid("f000aa66-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
         

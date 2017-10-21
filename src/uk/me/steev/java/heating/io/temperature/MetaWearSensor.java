@@ -16,7 +16,7 @@ public class MetaWearSensor extends BluetoothTemperatureSensor {
   @SuppressWarnings("unused")
   private byte[] TEMP_SENSOR_OFF = new byte[]{}; //TODO figure this out
   
-  public MetaWearSensor(BluetoothDevice device) {
+  public MetaWearSensor(BluetoothDevice device) throws BluetoothException {
     super(device);
   }
   
@@ -30,16 +30,16 @@ public class MetaWearSensor extends BluetoothTemperatureSensor {
     
     for (int x = 0; x < 4; x++) {
       try {
-        Thread.sleep(200);
-        byte[] result = this.readFromUuid("326a9001-85cb-9195-d9dd-464cfbbae75a");
+        Thread.sleep(25);
+        byte[] result = this.readFromUuid("326a9006-85cb-9195-d9dd-464cfbbae75a");
   
-        int ambientTempRaw = (result[6] & 0xff) | (result[7] << 8);
+        int ambientTempRaw = (result[3] & 0xff) | (result[4] << 8);
         if (ambientTempRaw == 0)
           continue;
   
         float ambientTempCelsius = ambientTempRaw / 8f;
         
-        logger.trace("RED_LED_OFF for " + this.toString());
+        logger.trace("RED_LED_OFF for " + this.toString() + " after " + x + " iterations");
         this.writeToUuid("326a9001-85cb-9195-d9dd-464cfbbae75a", RED_LED_OFF);
 
         return ambientTempCelsius;

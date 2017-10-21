@@ -30,7 +30,7 @@ public class StatusServlet extends HeatingServlet {
       try {
         response.getWriter().println(heating.getBoiler().isHeating() ? 1 : 0);
       } catch (RelayException re) {
-        logger.catching(re);
+        logger.warn(re);
       }
       break;
     case "preheat":
@@ -39,7 +39,7 @@ public class StatusServlet extends HeatingServlet {
       try {
         response.getWriter().println(heating.getBoiler().isPreheating() ? 1 : 0);
       } catch (RelayException re) {
-        logger.catching(re);
+        logger.warn(re);
       }
       break;
     default:

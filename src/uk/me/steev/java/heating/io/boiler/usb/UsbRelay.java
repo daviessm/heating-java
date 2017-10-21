@@ -19,34 +19,36 @@ public class UsbRelay extends Relay {
     if (address.length < 2)
       return null;
 
-    Map<UsbPhysicalLocation, UsbRelay> relays = findRelays();
+    Map<UsbPhysicalLocation, UsbDevice> relays = findRelays();
     for (UsbPhysicalLocation physicalLocation : relays.keySet()) {
       if (physicalLocation.getBusNumber() == Integer.parseInt(address[0])) {
         byte[] locationOnBus = physicalLocation.getLocationOnBus();
         if (locationOnBus.length != address.length - 1)
           continue;
         
-        int i = 0;
+        int i = 1;
         boolean match = true;
         for (byte b : locationOnBus) {
-          if (b != Byte.parseByte(address[i++]))
+          if (b != Byte.parseByte(address[i++])) {
+            match = false;
             break;
+          }
         }
         if (match)
-          return relays.get(physicalLocation);
+          return new UsbRelay(relays.get(physicalLocation));
       }
     }
     return null;
   }
   
-  public static Map<UsbPhysicalLocation, UsbRelay> findRelays() {
-    Map<UsbPhysicalLocation, UsbRelay> relays = new HashMap<UsbPhysicalLocation, UsbRelay>();
+  protected static Map<UsbPhysicalLocation, UsbDevice> findRelays() {
+    Map<UsbPhysicalLocation, UsbDevice> relays = new HashMap<>();
     List<UsbDevice> devices = null;
     
     try {
       devices = UsbUtils.findDevices("16C0", "05DF");
       for (UsbDevice device : devices) {
-        relays.put(device.getPhysicalLocation(), new UsbRelay(device));
+        relays.put(device.getPhysicalLocation(), device);
       }
     } catch (UsbException ue) {
       logger.catching(Level.ERROR, ue);

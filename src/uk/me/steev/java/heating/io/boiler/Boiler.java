@@ -9,26 +9,27 @@ public class Boiler {
   static final Logger logger = LogManager.getLogger(Boiler.class.getName());
   protected Relay heatingRelay;
   protected Relay preheatRelay;
-  protected LocalDateTime heatingOn;
-  protected LocalDateTime heatingOff;
+  protected LocalDateTime timeHeatingOn;
+  protected LocalDateTime timeHeatingOff;
 
   public Boiler(Relay heatingRelay, Relay preheatRelay) {
     this.heatingRelay = heatingRelay;
     this.preheatRelay = preheatRelay;
+    this.timeHeatingOff = LocalDateTime.now();
   }
 
   public void startHeating() throws RelayException {
     logger.info("Heating on");
     this.heatingRelay.on();
-    this.heatingOff = null;
-    this.heatingOn = LocalDateTime.now();
+    this.timeHeatingOff = null;
+    this.timeHeatingOn = LocalDateTime.now();
   }
 
   public void stopHeating() throws RelayException {
     logger.info("Heating off");
     this.heatingRelay.off();
-    this.heatingOn = null;
-    this.heatingOff = LocalDateTime.now();
+    this.timeHeatingOn = null;
+    this.timeHeatingOff = LocalDateTime.now();
   }
 
   public void startPreheating() throws RelayException {
@@ -65,27 +66,28 @@ public class Boiler {
     this.preheatRelay = preheatRelay;
   }
 
-  public LocalDateTime getHeatingOn() {
-    return heatingOn;
+  public LocalDateTime getTimeHeatingOn() {
+    return timeHeatingOn;
   }
 
-  public void setHeatingOn(LocalDateTime heatingOn) {
-    this.heatingOn = heatingOn;
+  public void setTimeHeatingOn(LocalDateTime timeHeatingOn) {
+    this.timeHeatingOn = timeHeatingOn;
   }
 
-  public LocalDateTime getHeatingOff() {
-    return heatingOff;
+  public LocalDateTime getTimeHeatingOff() {
+    return timeHeatingOff;
   }
 
-  public void setHeatingOff(LocalDateTime heatingOff) {
-    this.heatingOff = heatingOff;
+  public void setTimeHeatingOff(LocalDateTime timeHeatingOff) {
+    this.timeHeatingOff = timeHeatingOff;
   }
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append("Boiler [heatingRelay=").append(heatingRelay).append(", preheatRelay=").append(preheatRelay)
-        .append(", heatingOn=").append(heatingOn).append(", heatingOff=").append(heatingOff).append("]");
+        .append(", heatingOn=").append(timeHeatingOn).append(", heatingOff=").append(timeHeatingOff)
+        .append(", proportionalTime=").append("]");
     return builder.toString();
   }
 }

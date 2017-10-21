@@ -2,7 +2,7 @@ package uk.me.steev.java.heating.io.http;
 
 import java.io.IOException;
 
-import org.apache.logging.log4j.LogManager;
+  import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.server.AbstractNCSARequestLog;
 import org.eclipse.jetty.server.Server;
@@ -37,7 +37,7 @@ public class HttpAdapter {
       server.start();
 
     } catch (Exception e) {
-      logger.catching(e);
+      logger.error(e);
     }
   }
   

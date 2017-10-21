@@ -3,11 +3,11 @@ package uk.me.steev.java.heating.io.temperature;
 import tinyb.BluetoothDevice;
 
 public class DummyTemperatureSensor extends BluetoothTemperatureSensor {
-  protected DummyTemperatureSensor(BluetoothDevice device) {
+  protected DummyTemperatureSensor(BluetoothDevice device) throws BluetoothException {
     super(device);
   }
 
   protected float getAmbientTemperature() throws BluetoothException {
-    return 5f;
+    return 12f;
   }
 }

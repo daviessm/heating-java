@@ -30,7 +30,7 @@ public class ExternalWeatherServlet extends HeatingServlet {
       try {
         response.getWriter().println(heating.getWeather().getLatestTemperature());
       } catch (CallFailedException cfe) {
-        logger.catching(cfe);
+        logger.warn(cfe);
       }
       break;
     case "apparent_temperature":
@@ -39,7 +39,7 @@ public class ExternalWeatherServlet extends HeatingServlet {
       try {
         response.getWriter().println(heating.getWeather().getApparentTemperature());
       } catch (CallFailedException cfe) {
-        logger.catching(cfe);
+        logger.warn(cfe);
       }
       break;
     default:

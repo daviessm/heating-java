@@ -30,7 +30,6 @@ import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events.Watch;
 import com.google.api.services.calendar.model.Channel;
 import com.google.api.services.calendar.model.Event;
-import com.google.api.services.calendar.model.Events;
 
 import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
@@ -39,7 +38,7 @@ public class CalendarAdapter {
   static final Logger logger = LogManager.getLogger(CalendarAdapter.class.getName());
   protected HeatingConfiguration config;
   protected Calendar calendar;
-  protected List<Event> latestEvents;
+  protected List<Event> cachedEvents;
   protected EventsUpdater eventsUpdater;
   protected UUID uuid;
   protected String resourceId;
@@ -79,7 +78,7 @@ public class CalendarAdapter {
 
   public CalendarAdapter(HeatingConfiguration config) throws IOException, HeatingException {
     this.config = config;
-    latestEvents = new ArrayList<Event>(10);
+    cachedEvents = new ArrayList<Event>(10);
     eventsUpdater = new EventsUpdater();
     
     try {
@@ -119,7 +118,7 @@ public class CalendarAdapter {
           .build();
   }
   
-  public List<Event> getEvents() throws IOException, HeatingException {
+  public void update() throws IOException, HeatingException {
     DateTime now = new DateTime(System.currentTimeMillis());
     
     String calendarId = config.getStringSetting("calendar", "calendar_id");
@@ -133,12 +132,14 @@ public class CalendarAdapter {
     this.uuid = UUID.randomUUID();
 
     logger.debug("Getting calendar events for calendar " + calendarId);
-    Events events = calendar.events().list(calendarId)
+    cachedEvents = calendar.events().list(calendarId)
         .setMaxResults(10)
         .setTimeMin(now)
         .setOrderBy("startTime")
         .setSingleEvents(true)
-        .execute();
+        .execute()
+        .getItems();
+    logger.debug("Got events " + cachedEvents);
     
     Channel channel = new Channel();
     channel.setId(uuid.toString());
@@ -146,8 +147,8 @@ public class CalendarAdapter {
     channel.setAddress(refreshAddress);
     channel.setType("web_hook");
     Watch watch = calendar.events().watch(calendarId, channel);
-    watch.execute();
-    return events.getItems();
+    Channel responseChannel = watch.execute();
+    this.resourceId = responseChannel.getResourceId();
   }
   
   public void stopWatching(String channelId, String resourceId) {
@@ -178,12 +179,12 @@ public class CalendarAdapter {
     this.calendar = calendar;
   }
 
-  public List<Event> getLatestEvents() {
-    return latestEvents;
+  public List<Event> getCachedEvents() {
+    return cachedEvents;
   }
 
-  public void setLatestEvents(List<Event> latestEvents) {
-    this.latestEvents = latestEvents;
+  public void setCachedEvents(List<Event> cachedEvents) {
+    this.cachedEvents = cachedEvents;
   }
 
   public EventsUpdater getEventsUpdater() {
@@ -213,9 +214,11 @@ public class CalendarAdapter {
   public class EventsUpdater implements Runnable {
     public void run() {
       try {
-        latestEvents = getEvents();
+        update();
       } catch (IOException | HeatingException e) {
         logger.catching(Level.WARN, e);
+      } catch (Throwable t) {
+        logger.catching(Level.ERROR, t);
       }
     }
   }
