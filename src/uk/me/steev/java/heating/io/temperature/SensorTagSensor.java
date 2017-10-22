@@ -8,7 +8,8 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
     super(device);
   }
   
-  protected float getAmbientTemperature() throws BluetoothException {
+  @Override
+  protected void updateTemperatureFromBluetooth() throws BluetoothException {
     logger.trace("Red LED on for " + this.toString());
     this.writeToUuid("f000aa65-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
     this.writeToUuid("f000aa66-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
@@ -37,7 +38,8 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
         logger.trace("Temperature sensor off for " + this.toString());
         this.writeToUuid("f000aa02-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
 
-        return ambientTempCelsius;
+        this.currentTemperature = ambientTempCelsius;
+        return;
       } catch (InterruptedException ie) {
         throw new BluetoothException("Interrupted in Thread.sleep()", ie);
       }

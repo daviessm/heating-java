@@ -20,7 +20,8 @@ public class MetaWearSensor extends BluetoothTemperatureSensor {
     super(device);
   }
   
-  protected float getAmbientTemperature() throws BluetoothException {
+  @Override
+  protected void updateTemperatureFromBluetooth() throws BluetoothException {
     logger.trace("RED_LED_ON_1 for " + this.toString());
     this.writeToUuid("326a9001-85cb-9195-d9dd-464cfbbae75a", RED_LED_ON_1);
     logger.trace("RED_LED_ON_2 for " + this.toString());
@@ -42,7 +43,8 @@ public class MetaWearSensor extends BluetoothTemperatureSensor {
         logger.trace("RED_LED_OFF for " + this.toString() + " after " + x + " iterations");
         this.writeToUuid("326a9001-85cb-9195-d9dd-464cfbbae75a", RED_LED_OFF);
 
-        return ambientTempCelsius;
+        this.currentTemperature = ambientTempCelsius;
+        return;
       } catch (InterruptedException ie) {
         throw new BluetoothException("Interrupted in Thread.sleep()", ie);
       }

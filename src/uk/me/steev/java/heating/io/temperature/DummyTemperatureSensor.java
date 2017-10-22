@@ -7,7 +7,7 @@ public class DummyTemperatureSensor extends BluetoothTemperatureSensor {
     super(device);
   }
 
-  protected float getAmbientTemperature() throws BluetoothException {
-    return 12f;
+  protected void updateTemperatureFromBluetooth() throws BluetoothException {
+    this.currentTemperature = 12f;
   }
 }
