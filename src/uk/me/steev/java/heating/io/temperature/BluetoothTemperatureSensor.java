@@ -19,16 +19,16 @@ import tinyb.BluetoothManager;
 
 public class BluetoothTemperatureSensor {
   static final Logger logger = LogManager.getLogger(BluetoothTemperatureSensor.class.getName());
-  protected BluetoothDevice device;
-  protected String name;
-  protected List<BluetoothGattService> services;
-  protected Map<String, BluetoothGattCharacteristic> characteristics;
-  protected Float currentTemperature;
-  protected LocalDateTime tempLastUpdated;
-  protected TemperatureUpdater temperatureUpdater;
-  protected ScheduledFuture<?> temperatureUpdatdaterFuture;
+  protected BluetoothDevice device = null;
+  protected String name = null;
+  protected List<BluetoothGattService> services = null;
+  protected Map<String, BluetoothGattCharacteristic> characteristics = null;
+  protected Float currentTemperature = null;
+  protected LocalDateTime tempLastUpdated = null;
+  protected TemperatureUpdater temperatureUpdater = null;
+  protected ScheduledFuture<?> temperatureUpdatdaterFuture = null;
   
-  protected BluetoothTemperatureSensor(BluetoothDevice device) throws BluetoothException {
+  protected BluetoothTemperatureSensor(BluetoothDevice device){
     this.temperatureUpdater = new TemperatureUpdater();
 
     if (null == device)
@@ -36,7 +36,9 @@ public class BluetoothTemperatureSensor {
     
     this.device = device;
     this.name = this.device.getName();
-    
+  }
+  
+  private void populateServicesAndCharacteristics() throws BluetoothException {
     try {
       this.device.connect();
       this.services = this.device.getServices();
@@ -49,7 +51,7 @@ public class BluetoothTemperatureSensor {
         }
       }
     } catch (tinyb.BluetoothException bte) {
-      throw new BluetoothException("Unable to instantiate object " + this.name + " at " + this.device.getAddress(), bte);
+      throw new BluetoothException("Unable to get Bluetooth details for " + this.toString(), bte);
     }
   }
   
@@ -59,6 +61,8 @@ public class BluetoothTemperatureSensor {
   }
   
   protected void writeToUuid(String uuid, byte[] data) throws BluetoothException {
+    if (null == this.characteristics)
+      populateServicesAndCharacteristics();
     if (this.characteristics.containsKey(uuid)) {
       try {
         this.characteristics.get(uuid).writeValue(data);
@@ -71,6 +75,8 @@ public class BluetoothTemperatureSensor {
   }
   
   protected byte[] readFromUuid(String uuid) throws BluetoothException {
+    if (null == this.characteristics)
+      populateServicesAndCharacteristics();
     if (this.characteristics.containsKey(uuid)) {
       try {
         return this.characteristics.get(uuid).readValue();
@@ -83,27 +89,22 @@ public class BluetoothTemperatureSensor {
   
   private static BluetoothTemperatureSensor getSensorForDevice(BluetoothDevice device) {
     BluetoothTemperatureSensor sensor = null;
-    try {
-      switch(device.getName()) {
-      case "MetaWear":
-        sensor = new MetaWearSensor(device);
-        break;
-      case "CC2650 SensorTag":
-      case "SensorTag 2.0":
-        sensor = new SensorTagSensor(device);
-        break;
-      default:
-        logger.info("Unknown device " + device.getName());
-      }
-    } catch (BluetoothException bte) {
-      logger.catching(Level.WARN, bte);
-      sensor = null;
+    switch(device.getName()) {
+    case "MetaWear":
+      sensor = new MetaWearSensor(device);
+      break;
+    case "CC2650 SensorTag":
+    case "SensorTag 2.0":
+      sensor = new SensorTagSensor(device);
+      break;
+    default:
+      logger.info("Unknown device " + device.getName());
     }
     return sensor;
   }
   
   public static Map<String,BluetoothTemperatureSensor> scanForSensors() {
-    Map<String,BluetoothTemperatureSensor> newSensors = new HashMap<>();
+    Map<String,BluetoothTemperatureSensor> allSensors = new HashMap<>();
 
     BluetoothManager manager = BluetoothManager.getBluetoothManager();
     LocalDateTime startedAt = LocalDateTime.now();
@@ -127,14 +128,14 @@ public class BluetoothTemperatureSensor {
       for (Entry<String, BluetoothDevice> entry : newDevices.entrySet()) {
         BluetoothTemperatureSensor sensor = getSensorForDevice(entry.getValue());
         if (null != sensor) {
-          logger.info("Found device " + sensor.getName() + " at " + entry.getKey());
-          newSensors.put(entry.getKey(), sensor);
+          logger.trace("Found device " + sensor.getName() + " at " + entry.getKey());
+          allSensors.put(entry.getKey(), sensor);
         }
       }
     }
     
     //allDevices.put("dummy", new DummyTemperatureSensor(null));
-    return newSensors;
+    return allSensors;
   }
   
   protected float getAmbientTemperature() throws BluetoothException {

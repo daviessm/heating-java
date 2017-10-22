@@ -4,7 +4,7 @@ import tinyb.BluetoothDevice;
 
 public class SensorTagSensor extends BluetoothTemperatureSensor {
 
-  public SensorTagSensor(BluetoothDevice device) throws BluetoothException {
+  public SensorTagSensor(BluetoothDevice device) {
     super(device);
   }
   

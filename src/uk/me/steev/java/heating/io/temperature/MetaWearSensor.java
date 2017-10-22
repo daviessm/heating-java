@@ -16,7 +16,7 @@ public class MetaWearSensor extends BluetoothTemperatureSensor {
   @SuppressWarnings("unused")
   private byte[] TEMP_SENSOR_OFF = new byte[]{}; //TODO figure this out
   
-  public MetaWearSensor(BluetoothDevice device) throws BluetoothException {
+  public MetaWearSensor(BluetoothDevice device) {
     super(device);
   }
   
