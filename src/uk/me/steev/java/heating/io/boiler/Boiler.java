@@ -15,7 +15,7 @@ public class Boiler {
   public Boiler(Relay heatingRelay, Relay preheatRelay) {
     this.heatingRelay = heatingRelay;
     this.preheatRelay = preheatRelay;
-    this.timeHeatingOff = LocalDateTime.now();
+    this.timeHeatingOff = LocalDateTime.now().minusDays(1);
   }
 
   public void startHeating() throws RelayException {
