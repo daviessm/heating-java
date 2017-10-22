@@ -394,7 +394,7 @@ public class Heating {
                 if (eventTemperature > currentTemperature) {
                   LocalDateTime newEventStartTime = eventStartTime.minus(effectDelayMinutes)
                       .minusSeconds((long) (minutesPerDegree.toMinutes() * (eventTemperature - currentTemperature) * 60));
-                  timesDueOn.add(new TemperatureEvent(eventStartTime, newEventStartTime, eventTemperature));
+                  timesDueOn.add(new TemperatureEvent(newEventStartTime, eventStartTime, eventTemperature));
                 }
               }            
             } catch (NumberFormatException nfe) {
