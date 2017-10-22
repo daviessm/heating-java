@@ -345,12 +345,14 @@ public class Heating {
           for (Entry<String,BluetoothTemperatureSensor> entry : sensors.entrySet()) {
             BluetoothTemperatureSensor sensor = entry.getValue();
             LocalDateTime lastUpdated = sensor.getTempLastUpdated();
-            if (!(null == lastUpdated) && LocalDateTime.now().isBefore(lastUpdated.plus(2, ChronoUnit.MINUTES))) {
+            LocalDateTime lastFailed = sensor.getTempLastUpdated();
+            if (!(null == lastUpdated) &&
+                lastUpdated.isAfter(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
               allCurrentTemps.add(sensor.getCurrentTemperature());
-            } else if (null == lastUpdated) {
-              logger.warn("Sensor time for " + sensor.toString() + " is null, ignoring");
+            } else if (null == lastUpdated && null == lastFailed) {
+              logger.warn("Sensor time and failed time for " + sensor.toString() + " are null, ignoring (just created?)");
             } else {
-              logger.warn("Sensor time for " + sensor.toString() + " is more than two minutes old, disconnecting");
+              logger.warn("Sensor time for " + sensor.toString() + " is more than three minutes old, disconnecting");
               sensor.disconnect();
               sensor.getTemperatureUpdatdaterFuture().cancel(false);
               synchronized (sensors) {
