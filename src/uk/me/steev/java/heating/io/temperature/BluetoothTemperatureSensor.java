@@ -50,7 +50,8 @@ public abstract class BluetoothTemperatureSensor {
         try {
           this.device.disconnect();
         } catch (tinyb.BluetoothException bte2) {
-          throw new BluetoothException("Unable to disconnect from " + this.toString() + " either", bte2);
+          logger.warn("Unable to disconnect from " + this.toString() + ", removing", bte2);
+          this.device.remove();
         }
       }
 
@@ -69,6 +70,7 @@ public abstract class BluetoothTemperatureSensor {
       if (!this.device.getServicesResolved()) {
         try {
           this.device.disconnect();
+          this.device.remove();
         } catch (tinyb.BluetoothException bte) {
           throw new BluetoothException("Unable to disconnect from " + this.toString(), bte);
         }
@@ -104,6 +106,7 @@ public abstract class BluetoothTemperatureSensor {
   public void disconnect() {
     logger.warn("Disconnecting from " + this.toString());
     device.disconnect();
+    device.remove();
   }
 
   protected void writeToUuid(String uuid, byte[] data) throws BluetoothException {
@@ -144,7 +147,8 @@ public abstract class BluetoothTemperatureSensor {
       sensor = new SensorTagSensor(device);
       break;
     default:
-      logger.info("Unknown device " + device.getName());
+      logger.info("Unknown device " + device.getName() + ", removing");
+      device.remove();
     }
     return sensor;
   }
