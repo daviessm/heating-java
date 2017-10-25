@@ -50,8 +50,8 @@ public abstract class BluetoothTemperatureSensor {
         try {
           this.device.disconnect();
         } catch (tinyb.BluetoothException bte2) {
-          logger.warn("Unable to disconnect from " + this.toString() + ", removing", bte2);
           this.device.remove();
+          throw new BluetoothException("Device has gone away", bte2);
         }
       }
 
