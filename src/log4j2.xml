@@ -2,10 +2,10 @@
 <Configuration status="WARN">
   <Appenders>
     <Console name="console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %class{-5}.%method(%file:%line) - %msg%n"/>
+      <PatternLayout pattern="%d{ISO8601} [%t] %-5level %class{-5}.%method(%file:%line) - %msg%n"/>
     </Console>
     <Console name="jetty" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %class{-2}.%method(%file:%line) - %msg%n"/>
+      <PatternLayout pattern="%d{ISO8601} [%t] %-5level %class{-2}.%method(%file:%line) - %msg%n"/>
     </Console>
   </Appenders>
   <Loggers>
