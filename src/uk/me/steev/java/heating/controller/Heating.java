@@ -194,66 +194,6 @@ public class Heating {
     }
   }
 
-  public class TemperatureEvent implements Comparable<TemperatureEvent> {
-    private LocalDateTime timeDueOn;
-    LocalDateTime realTimeDueOn;
-    private float temperature;
-
-    public TemperatureEvent (LocalDateTime timeDueOn, LocalDateTime realTimeDueOn, float temperature) {
-      this.timeDueOn = timeDueOn;
-      this.realTimeDueOn = realTimeDueOn;
-      this.temperature = temperature;
-    }
-
-    public LocalDateTime getTimeDueOn() {
-      return timeDueOn;
-    }
-
-    public void setTimeDueOn(LocalDateTime timeDueOn) {
-      this.timeDueOn = timeDueOn;
-    }
-
-    public float getTemperature() {
-      return temperature;
-    }
-
-    public void setTemperature(float temperature) {
-      this.temperature = temperature;
-    }
-
-    public LocalDateTime getRealTimeDueOn() {
-      return realTimeDueOn;
-    }
-
-    public void setRealTimeDueOn(LocalDateTime realTimeDueOn) {
-      this.realTimeDueOn = realTimeDueOn;
-    }
-
-    public int compareTo(TemperatureEvent otherEvent) {
-      boolean isAfter = this.timeDueOn.isAfter(otherEvent.getTimeDueOn()) || 
-          (this.timeDueOn.equals(otherEvent.getTimeDueOn()) &&
-           this.temperature > otherEvent.getTemperature());
-      boolean isBefore = this.timeDueOn.isBefore(otherEvent.getTimeDueOn()) || 
-          (this.timeDueOn.equals(otherEvent.getTimeDueOn()) &&
-           this.temperature < otherEvent.getTemperature());
-      
-      if (isAfter)
-        return 1;
-      else if (isBefore)
-        return -1;
-      else
-        return 0;
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder builder = new StringBuilder();
-      builder.append("TemperatureEvent [timeDueOn=").append(timeDueOn).append(", realTimeDueOn=").append(realTimeDueOn)
-          .append(", temperature=").append(temperature).append("]");
-      return builder.toString();
-    }
-  }
-
   public class HeatingProcessor implements Runnable {
     public void run() {
       try {
@@ -390,13 +330,15 @@ public class Heating {
             try {
               float eventTemperature = Float.parseFloat(event.getSummary());
               LocalDateTime eventStartTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
-              if (eventStartTime.isBefore(LocalDateTime.now())) {
-                timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventTemperature));
+              LocalDateTime eventEndTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
+              if (eventStartTime.isBefore(LocalDateTime.now()) &&
+                  eventEndTime.isAfter(LocalDateTime.now())) {
+                timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventEndTime, eventTemperature));
               } else if (eventStartTime.isAfter(LocalDateTime.now())) {
                 if (eventTemperature > currentTemperature) {
                   LocalDateTime newEventStartTime = eventStartTime.minus(effectDelayMinutes)
                       .minusSeconds((long) (minutesPerDegree.toMinutes() * (eventTemperature - currentTemperature) * 60));
-                  timesDueOn.add(new TemperatureEvent(newEventStartTime, eventStartTime, eventTemperature));
+                  timesDueOn.add(new TemperatureEvent(newEventStartTime, eventStartTime, eventEndTime, eventTemperature));
                 }
               }            
             } catch (NumberFormatException nfe) {
@@ -412,14 +354,14 @@ public class Heating {
             if (timesDueOn.size() > 0) {
               TemperatureEvent timeDueOn = timesDueOn.get(0);
               
-              if (timeDueOn.getRealTimeDueOn().isBefore(LocalDateTime.now()))
+              if (timeDueOn.getStartTime().isBefore(LocalDateTime.now()))
                 setDesiredTemperature(timeDueOn.temperature);
 
               if (timeDueOn.getTemperature() > currentTemperature &&
                   timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
                 logger.debug("Current temperature " + currentTemperature +
                     " is below desired temperature " + timeDueOn.getTemperature() + 
-                    " in an event starting at " + timeDueOn.getRealTimeDueOn() +
+                    " in an event starting at " + timeDueOn.getStartTime() +
                     " warming up from " + timeDueOn.getTimeDueOn());
 
                 Duration newProportionalTime = Duration.ofSeconds((long) (timeDueOn.getTemperature() - currentTemperature) * proportionalHeatingIntervalMinutes.toMinutes() / 2 / 60);
