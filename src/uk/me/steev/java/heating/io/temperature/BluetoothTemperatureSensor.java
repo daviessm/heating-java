@@ -28,7 +28,7 @@ public abstract class BluetoothTemperatureSensor {
   protected LocalDateTime tempLastFailedUpdate = null;
   protected TemperatureUpdater temperatureUpdater = null;
   protected ScheduledFuture<?> temperatureUpdatdaterFuture = null;
-  
+
   protected BluetoothTemperatureSensor(BluetoothDevice device){
     this.temperatureUpdater = new TemperatureUpdater();
 
@@ -49,11 +49,14 @@ public abstract class BluetoothTemperatureSensor {
         logger.warn("Unable to connect to " + this.toString());
         try {
           this.device.disconnect();
+          this.device.remove();
         } catch (tinyb.BluetoothException bte2) {
           this.device.remove();
-          throw new BluetoothException("Device has gone away", bte2);
+          throw new BluetoothException("Device " + this.toString() + " has gone away", bte2);
         }
+        throw new BluetoothException("Device " + this.toString() + " has gone away", bte1);
       }
+      logger.trace("Connected to " + this.toString());
 
       LocalDateTime startTime = LocalDateTime.now();
       while (LocalDateTime.now().isBefore(startTime.plusSeconds(30))) {
@@ -72,6 +75,7 @@ public abstract class BluetoothTemperatureSensor {
           this.device.disconnect();
           this.device.remove();
         } catch (tinyb.BluetoothException bte) {
+          this.device.remove();
           throw new BluetoothException("Unable to disconnect from " + this.toString(), bte);
         }
         throw new BluetoothException("Unable to get services for " + this.toString());
@@ -109,9 +113,16 @@ public abstract class BluetoothTemperatureSensor {
     device.remove();
   }
 
-  protected void writeToUuid(String uuid, byte[] data) throws BluetoothException {
+  private void checkConnected() throws BluetoothException {
     if (null == this.characteristics)
-      populateServicesAndCharacteristics();
+      this.populateServicesAndCharacteristics();
+
+    if (!(this.device.getConnected()))
+      this.device.connect();
+  }
+
+  protected void writeToUuid(String uuid, byte[] data) throws BluetoothException {
+    this.checkConnected();
     if (this.characteristics.containsKey(uuid)) {
       try {
         this.characteristics.get(uuid).writeValue(data);
@@ -124,8 +135,7 @@ public abstract class BluetoothTemperatureSensor {
   }
 
   protected byte[] readFromUuid(String uuid) throws BluetoothException {
-    if (null == this.characteristics)
-      populateServicesAndCharacteristics();
+    this.checkConnected();
     if (this.characteristics.containsKey(uuid)) {
       try {
         return this.characteristics.get(uuid).readValue();
@@ -160,7 +170,7 @@ public abstract class BluetoothTemperatureSensor {
     LocalDateTime startedAt = LocalDateTime.now();
 
     logger.debug("Start scanning for devices");
-    if (manager.startDiscovery()) {   
+    if (manager.startDiscovery()) {
       Map<String,BluetoothDevice> newDevices = new HashMap<>();
       while (startedAt.plus(10, ChronoUnit.SECONDS).isAfter(LocalDateTime.now())) {
         for (BluetoothDevice device : manager.getDevices()) {
@@ -189,8 +199,12 @@ public abstract class BluetoothTemperatureSensor {
   }
 
   protected void updateTemperature() throws BluetoothException {
-    this.tempLastFailedUpdate = LocalDateTime.now();
-    updateTemperatureFromBluetooth();
+    try {
+      updateTemperatureFromBluetooth();
+    } catch (BluetoothException bte) {
+      this.tempLastFailedUpdate = LocalDateTime.now();
+      throw bte;
+    }
     this.tempLastUpdated = LocalDateTime.now();
     this.tempLastFailedUpdate = null;
   }
