@@ -43,32 +43,32 @@ public class Heating {
   protected HeatingProcessor processor;
   protected HttpAdapter httpAdapter;
   protected Float desiredTemperature;
-  
+
   public Heating(File configFile) throws HeatingException {
     try {
       //Get configuration
       this.config = HeatingConfiguration.getConfiguration(configFile);
-      
+
       //Set up relays
       Relay heatingRelay = Relay.findRelay(RelayTypes.USB_1, config.getRelay("heating"));
       Relay preheatRelay = Relay.findRelay(RelayTypes.USB_1, config.getRelay("preheat"));
       this.boiler = new Boiler(heatingRelay, preheatRelay);
-      
+
       //Set up weather API
       this.weather = new WeatherAdapter(this.config);
-      
+
       //Set up events API
       this.calendar = new CalendarAdapter(this.config);
-      
+
       //Set up an empty set of temperature sensors
       this.sensors = new ConcurrentHashMap<>();
-      
+
       //Set up a thing to run other things periodically
       this.scheduledExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(10);
-      
+
       this.scanner = new SensorScanner();
       this.processor = new HeatingProcessor();
-      
+
       this.httpAdapter = HttpAdapter.getHttpAdapter(this);
     } catch (RelayException | IOException e) {
       throw new HeatingException("Error creating Heating object", e);
@@ -78,7 +78,7 @@ public class Heating {
   public Heating() throws HeatingException {
     this(new File("config.json"));
   }
-  
+
   public void start() {
     //Look for new sensors every minute
     this.scheduledExecutor.scheduleAtFixedRate(this.scanner, 0, 1, TimeUnit.MINUTES);
@@ -140,7 +140,7 @@ public class Heating {
   public void setScheduledExecutor(ScheduledThreadPoolExecutor scheduledExecutor) {
     this.scheduledExecutor = scheduledExecutor;
   }
-  
+
   public SensorScanner getScanner() {
     return scanner;
   }
@@ -212,9 +212,9 @@ public class Heating {
           logger.catching(Level.FATAL, e);
           return;
         }
-        
+
         setDesiredTemperature((float) minimumTemperature);
-  
+
         //Do preheat first, it doesn't rely on temperature
         //Get a list of preheat events
         List<Event> preheatEvents = new ArrayList<>();
@@ -222,13 +222,13 @@ public class Heating {
           if ("preheat".equals(event.getSummary().toLowerCase()))
             preheatEvents.add(event);
         }
-  
+
         //Check if any of them are now
         boolean shouldPreheat = false;
         for (Event event : preheatEvents) {
           LocalDateTime eventStartTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
           LocalDateTime eventEndTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
-          
+
           if (LocalDateTime.now().isAfter(eventStartTime) &&
               LocalDateTime.now().isBefore(eventEndTime)) {
             shouldPreheat = true;
@@ -250,20 +250,20 @@ public class Heating {
         } catch (RelayException re) {
           logger.catching(Level.ERROR, re);
         }
-        
+
         //Now events that are "on"
         List<Event> heatingOnEvents = new ArrayList<>();
         for (Event event : calendar.getCachedEvents()) {
           if ("on".equals(event.getSummary().toLowerCase()))
             heatingOnEvents.add(event);
         }
-  
+
         //Check if any of them are now
         boolean forcedOn = false;
         for (Event event : heatingOnEvents) {
           LocalDateTime eventStartTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
           LocalDateTime eventEndTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
-          
+
           if (LocalDateTime.now().isAfter(eventStartTime) &&
               LocalDateTime.now().isBefore(eventEndTime)) {
             forcedOn = true;
@@ -277,7 +277,7 @@ public class Heating {
             break;
           }
         }
-  
+
         if (!forcedOn) {
           //Now get latest temperatures
           List<Float> allCurrentTemps = new ArrayList<>();
@@ -301,18 +301,18 @@ public class Heating {
             }
           }
           allCurrentTemps.sort(null);
-          
+
           logger.info("Current temperatures: " + allCurrentTemps.toString());
-          
+
           if (allCurrentTemps.size() > 0)
             currentTemperature = allCurrentTemps.get(0);
-  
+
           if (null == currentTemperature) {
             logger.warn("No current temperature from sensors");
             return;
           }
           logger.debug("Current temperature is " + currentTemperature);
-  
+
           try {
             if (currentTemperature < minimumTemperature) {
               logger.info("Current temperature " + currentTemperature + " is less than minimum temperature " + minimumTemperature + ". On.");
@@ -323,14 +323,14 @@ public class Heating {
           } catch (RelayException re) {
             logger.catching(Level.ERROR, re);
           }
-          
+
           List<TemperatureEvent> timesDueOn = new ArrayList<>();
-          
+
           for (Event event : calendar.getCachedEvents()) {
             try {
               float eventTemperature = Float.parseFloat(event.getSummary());
-              LocalDateTime eventStartTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
-              LocalDateTime eventEndTime  = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
+              LocalDateTime eventStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
+              LocalDateTime eventEndTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
               if (eventStartTime.isBefore(LocalDateTime.now()) &&
                   eventEndTime.isAfter(LocalDateTime.now())) {
                 timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventEndTime, eventTemperature));
@@ -340,27 +340,27 @@ public class Heating {
                       .minusSeconds((long) (minutesPerDegree.toMinutes() * (eventTemperature - currentTemperature) * 60));
                   timesDueOn.add(new TemperatureEvent(newEventStartTime, eventStartTime, eventEndTime, eventTemperature));
                 }
-              }            
+              }
             } catch (NumberFormatException nfe) {
               continue;
             }
           }
-  
+
           //Put the elements in order of soonest to latest
           timesDueOn.sort(null);
           logger.debug("Times due on: " + timesDueOn.toString());
-  
+
           try {
             if (timesDueOn.size() > 0) {
               TemperatureEvent timeDueOn = timesDueOn.get(0);
-              
+
               if (timeDueOn.getStartTime().isBefore(LocalDateTime.now()))
                 setDesiredTemperature(timeDueOn.temperature);
 
               if (timeDueOn.getTemperature() > currentTemperature &&
                   timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
                 logger.debug("Current temperature " + currentTemperature +
-                    " is below desired temperature " + timeDueOn.getTemperature() + 
+                    " is below desired temperature " + timeDueOn.getTemperature() +
                     " in an event starting at " + timeDueOn.getStartTime() +
                     " warming up from " + timeDueOn.getTimeDueOn());
 
@@ -389,6 +389,12 @@ public class Heating {
                   logger.debug("Boiler is on, turn off");
                   boiler.stopHeating();
                 }
+              }
+            } else {
+              logger.debug("No events where there would be potential heating demand");
+              if (boiler.isHeating()) {
+                logger.debug("Boiler is on, turn off");
+                boiler.stopHeating();
               }
             }
           } catch (RelayException re) {
