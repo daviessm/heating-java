@@ -39,7 +39,7 @@ public abstract class BluetoothTemperatureSensor {
     this.name = this.device.getName();
   }
 
-  private void populateServicesAndCharacteristics() throws BluetoothException {
+  private synchronized void populateServicesAndCharacteristics() throws BluetoothException {
     try {
       logger.trace("Connecting to " + this.toString());
       try {
@@ -47,13 +47,7 @@ public abstract class BluetoothTemperatureSensor {
           throw new BluetoothException("Unable to connect to " + this.toString());
       } catch (tinyb.BluetoothException bte1) {
         logger.warn("Unable to connect to " + this.toString());
-        try {
-          this.device.disconnect();
-          this.device.remove();
-        } catch (tinyb.BluetoothException bte2) {
-          this.device.remove();
-          throw new BluetoothException("Device " + this.toString() + " has gone away", bte2);
-        }
+        this.disconnect();
         throw new BluetoothException("Device " + this.toString() + " has gone away", bte1);
       }
       logger.trace("Connected to " + this.toString());
@@ -72,10 +66,8 @@ public abstract class BluetoothTemperatureSensor {
       }
       if (!this.device.getServicesResolved()) {
         try {
-          this.device.disconnect();
-          this.device.remove();
+          this.disconnect();
         } catch (tinyb.BluetoothException bte) {
-          this.device.remove();
           throw new BluetoothException("Unable to disconnect from " + this.toString(), bte);
         }
         throw new BluetoothException("Unable to get services for " + this.toString());
@@ -107,13 +99,13 @@ public abstract class BluetoothTemperatureSensor {
     }
   }
 
-  public void disconnect() {
+  public synchronized void disconnect() {
     logger.warn("Disconnecting from " + this.toString());
     device.disconnect();
     device.remove();
   }
 
-  private void checkConnected() throws BluetoothException {
+  private synchronized void checkConnected() throws BluetoothException {
     if (null == this.characteristics)
       this.populateServicesAndCharacteristics();
 
@@ -121,7 +113,7 @@ public abstract class BluetoothTemperatureSensor {
       this.device.connect();
   }
 
-  protected void writeToUuid(String uuid, byte[] data) throws BluetoothException {
+  protected synchronized void writeToUuid(String uuid, byte[] data) throws BluetoothException {
     this.checkConnected();
     if (this.characteristics.containsKey(uuid)) {
       try {
@@ -134,7 +126,7 @@ public abstract class BluetoothTemperatureSensor {
     }
   }
 
-  protected byte[] readFromUuid(String uuid) throws BluetoothException {
+  protected synchronized byte[] readFromUuid(String uuid) throws BluetoothException {
     this.checkConnected();
     if (this.characteristics.containsKey(uuid)) {
       try {
@@ -198,7 +190,7 @@ public abstract class BluetoothTemperatureSensor {
     return allSensors;
   }
 
-  protected void updateTemperature() throws BluetoothException {
+  protected synchronized void updateTemperature() throws BluetoothException {
     try {
       updateTemperatureFromBluetooth();
     } catch (BluetoothException bte) {
@@ -294,15 +286,17 @@ public abstract class BluetoothTemperatureSensor {
 
   public class TemperatureUpdater implements Runnable {
     public void run() {
-      try {
+      synchronized(this) {
         try {
-          updateTemperature();
-          logger.info("Got temperature " + currentTemperature + " for device " + device.getAddress());
-        } catch (BluetoothException be) {
-          logger.catching(Level.WARN, be);
+          try {
+            updateTemperature();
+            logger.info("Got temperature " + currentTemperature + " for device " + device.getAddress());
+          } catch (BluetoothException be) {
+            logger.catching(Level.WARN, be);
+          }
+        } catch (Throwable t) {
+          logger.catching(Level.ERROR, t);
         }
-      } catch (Throwable t) {
-        logger.catching(Level.ERROR, t);
       }
     }
   }
