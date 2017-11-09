@@ -101,8 +101,16 @@ public abstract class BluetoothTemperatureSensor {
 
   public synchronized void disconnect() {
     logger.warn("Disconnecting from " + this.toString());
-    device.disconnect();
-    device.remove();
+    try {
+      device.disconnect();
+    } catch (tinyb.BluetoothException bte) {
+      logger.info("Unable to disconnect", bte);
+    }
+    try {
+      device.remove();
+    } catch (tinyb.BluetoothException bte) {
+      logger.info("Unable to remove", bte);
+    }
   }
 
   private synchronized void checkConnected() throws BluetoothException {
