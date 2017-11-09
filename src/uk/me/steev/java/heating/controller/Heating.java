@@ -364,7 +364,7 @@ public class Heating {
 
                 if (timeDueOn.getStartTime().isAfter(LocalDateTime.now()) &&
                     timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now()) &&
-                    (double) timeDueOn.getTemperature() - overshootDegrees > currentTemperature &&
+                    timeDueOn.getTemperature() < (double) currentTemperature + overshootDegrees &&
                     boiler.isHeating()) {
                   logger.info("Warming up, temperature will reach desired point, turn off");
                   boiler.stopHeating();
