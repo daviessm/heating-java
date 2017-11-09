@@ -13,7 +13,7 @@ import uk.me.steev.java.heating.utils.JSONUtils;
 public class HeatingConfiguration {
   private static HeatingConfiguration SINGLETON = null;
   private static JSONObject CONFIGURATION = null;
-  
+
   public static HeatingConfiguration getConfiguration(File configurationLocation) throws HeatingException {
     if (null == HeatingConfiguration.SINGLETON) {
       synchronized (HeatingConfiguration.class) {
@@ -22,7 +22,7 @@ public class HeatingConfiguration {
     }
     return HeatingConfiguration.SINGLETON;
   }
-  
+
   private HeatingConfiguration(File configurationLocation) throws HeatingException {
     try {
       HeatingConfiguration.CONFIGURATION = JSONUtils.readJsonFromFile(configurationLocation);
@@ -32,7 +32,7 @@ public class HeatingConfiguration {
       throw new HeatingException("Cannot get configuration", ioe);
     }
   }
-  
+
   public String getStringSetting(String category, String setting) throws HeatingException {
     try {
       return CONFIGURATION.getJSONObject(category).getString(setting);
@@ -44,6 +44,14 @@ public class HeatingConfiguration {
   public int getIntegerSetting(String category, String setting) throws HeatingException {
     try {
       return CONFIGURATION.getJSONObject(category).getInt(setting);
+    } catch (JSONException jsone) {
+      throw new HeatingException(category + "." + setting + " not found", jsone);
+    }
+  }
+
+  public double getDoubleSetting(String category, String setting) throws HeatingException {
+    try {
+      return CONFIGURATION.getJSONObject(category).getDouble(setting);
     } catch (JSONException jsone) {
       throw new HeatingException(category + "." + setting + " not found", jsone);
     }
