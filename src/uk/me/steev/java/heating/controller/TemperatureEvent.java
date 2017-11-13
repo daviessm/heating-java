@@ -12,6 +12,7 @@ public class TemperatureEvent implements Comparable<TemperatureEvent> {
       LocalDateTime endTime, float temperature) {
     this.timeDueOn = timeDueOn;
     this.startTime = startTime;
+    this.endTime = endTime;
     this.temperature = temperature;
   }
 
@@ -48,13 +49,13 @@ public class TemperatureEvent implements Comparable<TemperatureEvent> {
   }
 
   public int compareTo(TemperatureEvent otherEvent) {
-    boolean isAfter = this.timeDueOn.isAfter(otherEvent.getTimeDueOn()) || 
+    boolean isAfter = this.timeDueOn.isAfter(otherEvent.getTimeDueOn()) ||
         (this.timeDueOn.equals(otherEvent.getTimeDueOn()) &&
          this.temperature > otherEvent.getTemperature());
-    boolean isBefore = this.timeDueOn.isBefore(otherEvent.getTimeDueOn()) || 
+    boolean isBefore = this.timeDueOn.isBefore(otherEvent.getTimeDueOn()) ||
         (this.timeDueOn.equals(otherEvent.getTimeDueOn()) &&
          this.temperature < otherEvent.getTemperature());
-    
+
     if (isAfter)
       return 1;
     else if (isBefore)
