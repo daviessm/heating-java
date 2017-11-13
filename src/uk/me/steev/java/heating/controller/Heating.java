@@ -357,7 +357,18 @@ public class Heating {
 
             try {
               if (timesDueOn.size() > 0) {
-                TemperatureEvent timeDueOn = timesDueOn.get(0);
+                TemperatureEvent timeDueOn = null;
+                //Find if we need to warm up for any future events
+                for (TemperatureEvent event : timesDueOn) {
+                  if (event.getStartTime().isBefore(LocalDateTime.now()))
+                    continue;
+
+                  if (event.getTimeDueOn().isBefore(LocalDateTime.now()))
+                    timeDueOn = event;
+                }
+                //No events to warm up for, use first event in list
+                if (null == timeDueOn)
+                  timeDueOn = timesDueOn.get(0);
 
                 if (timeDueOn.getStartTime().isBefore(LocalDateTime.now()))
                   setDesiredTemperature(timeDueOn.temperature);
