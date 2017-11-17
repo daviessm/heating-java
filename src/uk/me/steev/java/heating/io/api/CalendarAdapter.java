@@ -80,17 +80,17 @@ public class CalendarAdapter {
     this.config = config;
     cachedEvents = new ArrayList<Event>(10);
     eventsUpdater = new EventsUpdater();
-    
+
     try {
       int intervalSeconds = config.getIntegerSetting("calendar", "update_calendar_interval_seconds");
       updateInterval = Duration.ofSeconds(intervalSeconds);
     } catch (HeatingException he) {
       logger.catching(Level.FATAL, he);
     }
-    
+
     List<String> redirectURLs = new ArrayList<String>();
     redirectURLs.add("urn:ietf:wg:oauth:2.0:oob");
-    
+
     logger.trace("Loading client secrets");
     GoogleClientSecrets clientSecrets = new GoogleClientSecrets()
       .setInstalled(new GoogleClientSecrets.Details()
@@ -110,25 +110,25 @@ public class CalendarAdapter {
       logger.trace("Trigger user authorisation request");
       Credential credential = new AuthorizationCodeInstalledApp(
           flow, new LocalServerReceiver()).authorize("user");
-      
+
       logger.trace("Make calendar object");
       this.calendar = new com.google.api.services.calendar.Calendar.Builder(
           HTTP_TRANSPORT, JSON_FACTORY, credential)
           .setApplicationName("heating-java")
           .build();
   }
-  
+
   public void update() throws IOException, HeatingException {
     DateTime now = new DateTime(System.currentTimeMillis());
-    
+
     String calendarId = config.getStringSetting("calendar", "calendar_id");
     String refreshAddress = config.getStringSetting("calendar", "refresh_address");
-    
+
     if (!(null == this.uuid) &&
         !(null == this.resourceId)) {
       stopWatching(uuid.toString(), resourceId);
     }
-    
+
     this.uuid = UUID.randomUUID();
 
     logger.debug("Getting calendar events for calendar " + calendarId);
@@ -140,7 +140,7 @@ public class CalendarAdapter {
         .execute()
         .getItems();
     logger.debug("Got events " + cachedEvents);
-    
+
     Channel channel = new Channel();
     channel.setId(uuid.toString());
     channel.setExpiration(LocalDateTime.now().plus(updateInterval).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
@@ -150,19 +150,19 @@ public class CalendarAdapter {
     Channel responseChannel = watch.execute();
     this.resourceId = responseChannel.getResourceId();
   }
-  
+
   public void stopWatching(String channelId, String resourceId) {
     Channel channel = new Channel();
     channel.setId(channelId);
     channel.setResourceId(resourceId);
-    
+
     try {
       calendar.channels().stop(channel).execute();
     } catch (IOException ioe) {
       logger.catching(ioe);
     }
   }
-  
+
   public HeatingConfiguration getConfig() {
     return config;
   }
@@ -217,8 +217,10 @@ public class CalendarAdapter {
         update();
       } catch (IOException | HeatingException e) {
         logger.catching(Level.WARN, e);
+        throw new RuntimeException(e);
       } catch (Throwable t) {
         logger.catching(Level.ERROR, t);
+        throw new RuntimeException(t);
       }
     }
   }

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +29,7 @@ import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.boiler.RelayTypes;
 import uk.me.steev.java.heating.io.http.HttpAdapter;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
+import uk.me.steev.java.heating.utils.ResubmittingScheduledExecutor;
 
 public class Heating {
   static final Logger logger = LogManager.getLogger(Heating.class.getName());
@@ -64,7 +64,7 @@ public class Heating {
       this.sensors = new ConcurrentHashMap<>();
 
       //Set up a thing to run other things periodically
-      this.scheduledExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(10);
+      this.scheduledExecutor = new ResubmittingScheduledExecutor(10);
 
       this.scanner = new SensorScanner();
       this.processor = new HeatingProcessor();
