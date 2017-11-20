@@ -48,7 +48,11 @@ public class ResubmittingScheduledExecutor extends ScheduledThreadPoolExecutor {
       }
     }
     if (t != null) {
-      logger.catching(Level.WARN, t);
+      Throwable cause = t.getCause();
+      if (null != cause)
+        logger.catching(Level.WARN, cause);
+      else
+        logger.catching(Level.WARN, t);
       this.schedule(r, 1, TimeUnit.MINUTES);
     }
   }
