@@ -170,27 +170,37 @@ public abstract class BluetoothTemperatureSensor {
     LocalDateTime startedAt = LocalDateTime.now();
 
     logger.debug("Start scanning for devices");
-    if (manager.startDiscovery()) {
-      Map<String,BluetoothDevice> newDevices = new HashMap<>();
-      while (startedAt.plus(10, ChronoUnit.SECONDS).isAfter(LocalDateTime.now())) {
-        for (BluetoothDevice device : manager.getDevices()) {
-          newDevices.put(device.getAddress(), device);
+    try {
+      if (manager.startDiscovery()) {
+        Map<String,BluetoothDevice> newDevices = new HashMap<>();
+        while (startedAt.plus(10, ChronoUnit.SECONDS).isAfter(LocalDateTime.now())) {
+          for (BluetoothDevice device : manager.getDevices()) {
+            newDevices.put(device.getAddress(), device);
+          }
+          try {
+            Thread.sleep(100);
+          } catch (InterruptedException e) {
+            logger.catching(Level.WARN, e);
+          }
         }
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException e) {
-          logger.catching(Level.WARN, e);
+        logger.debug("Stop scanning for devices");
+        manager.stopDiscovery();
+  
+        for (Entry<String, BluetoothDevice> entry : newDevices.entrySet()) {
+          BluetoothTemperatureSensor sensor = getSensorForDevice(entry.getValue());
+          if (null != sensor) {
+            logger.trace("Found device " + sensor.getName() + " at " + entry.getKey());
+            allSensors.put(entry.getKey(), sensor);
+          }
         }
       }
-      logger.debug("Stop scanning for devices");
-      manager.stopDiscovery();
-
-      for (Entry<String, BluetoothDevice> entry : newDevices.entrySet()) {
-        BluetoothTemperatureSensor sensor = getSensorForDevice(entry.getValue());
-        if (null != sensor) {
-          logger.trace("Found device " + sensor.getName() + " at " + entry.getKey());
-          allSensors.put(entry.getKey(), sensor);
-        }
+    } catch (tinyb.BluetoothException bte) {
+      logger.catching(Level.WARN, bte);
+      //Can't start discovery, is there one already in progress?
+      try {
+        manager.stopDiscovery();
+      } catch (tinyb.BluetoothException bte1) {
+        logger.catching(Level.ERROR, bte1);
       }
     }
 
