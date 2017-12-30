@@ -387,7 +387,7 @@ public class Heating {
                       " in an event starting at " + timeDueOn.getStartTime() +
                       " warming up from " + timeDueOn.getTimeDueOn());
 
-                  Duration newProportionalTime = Duration.ofSeconds((long) (timeDueOn.getTemperature() - currentTemperature) * proportionalHeatingIntervalMinutes.toMinutes() / 2 / 60);
+                  Duration newProportionalTime = Duration.ofSeconds((long) ((timeDueOn.getTemperature() - currentTemperature) * proportionalHeatingIntervalMinutes.toMinutes() * 60));
                   if (timeDueOn.getStartTime().isAfter(LocalDateTime.now()) && timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
                     logger.debug("Warm-up period, stay on until desired temp period starts");
                     newProportionalTime = proportionalHeatingIntervalMinutes;
