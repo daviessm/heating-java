@@ -360,8 +360,10 @@ public class Heating {
                 TemperatureEvent timeDueOn = null;
                 //Find if we need to warm up for any future events
                 for (TemperatureEvent event : timesDueOn) {
-                  if (event.getStartTime().isBefore(LocalDateTime.now()))
+                  if (event.getStartTime().isBefore(LocalDateTime.now())) {
+                    setDesiredTemperature(event.temperature);
                     continue;
+                  }
 
                   if (event.getTimeDueOn().isBefore(LocalDateTime.now()))
                     timeDueOn = event;
