@@ -303,6 +303,8 @@ public abstract class BluetoothTemperatureSensor {
   }
 
   public class TemperatureUpdater implements Runnable {
+    private Runnable callback;
+    
     public void run() {
       synchronized(this) {
         try {
@@ -315,7 +317,17 @@ public abstract class BluetoothTemperatureSensor {
         } catch (Throwable t) {
           logger.catching(Level.ERROR, t);
         }
+        if (null != callback)
+          callback.run();
       }
+    }
+
+    public Runnable getCallback() {
+      return callback;
+    }
+
+    public void setCallback(Runnable callback) {
+      this.callback = callback;
     }
   }
 }

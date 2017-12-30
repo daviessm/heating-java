@@ -29,6 +29,7 @@ import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.boiler.RelayTypes;
 import uk.me.steev.java.heating.io.http.HttpAdapter;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
+import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor.TemperatureUpdater;
 import uk.me.steev.java.heating.utils.ResubmittingScheduledExecutor;
 
 public class Heating {
@@ -54,11 +55,14 @@ public class Heating {
       Relay preheatRelay = Relay.findRelay(RelayTypes.USB_1, config.getRelay("preheat"));
       this.boiler = new Boiler(heatingRelay, preheatRelay);
 
+      //Set up event processor
+      this.processor = new HeatingProcessor();
+
       //Set up weather API
       this.weather = new WeatherAdapter(this.config);
 
       //Set up events API
-      this.calendar = new CalendarAdapter(this.config);
+      this.calendar = new CalendarAdapter(this.config, this.processor);
 
       //Set up an empty set of temperature sensors
       this.sensors = new ConcurrentHashMap<>();
@@ -66,8 +70,7 @@ public class Heating {
       //Set up a thing to run other things periodically
       this.scheduledExecutor = new ResubmittingScheduledExecutor(10);
 
-      this.scanner = new SensorScanner();
-      this.processor = new HeatingProcessor();
+      this.scanner = new SensorScanner(this.processor);
 
       this.httpAdapter = HttpAdapter.getHttpAdapter(this);
     } catch (RelayException | IOException e) {
@@ -90,7 +93,7 @@ public class Heating {
     this.scheduledExecutor.scheduleAtFixedRate(weather.getUpdater(), 0, 15, TimeUnit.MINUTES);
 
     //Process the whole lot every minute
-    this.scheduledExecutor.scheduleAtFixedRate(this.processor, 0, 1, TimeUnit.MINUTES);
+    this.scheduledExecutor.scheduleWithFixedDelay(this.processor, 0, 1, TimeUnit.MINUTES);
   }
 
   public HeatingConfiguration getConfig() {
@@ -174,6 +177,12 @@ public class Heating {
   }
 
   public class SensorScanner implements Runnable {
+    private Runnable temperatureUpdatedCallback;
+
+    public SensorScanner(Runnable temperatureUpdatedCallback) {
+      this.temperatureUpdatedCallback = temperatureUpdatedCallback;
+    }
+
     public void run() {
       synchronized(boiler) {
         try {
@@ -182,7 +191,8 @@ public class Heating {
             for (Entry<String, BluetoothTemperatureSensor> entry : newSensors.entrySet()) {
               if (!sensors.containsKey(entry.getKey())) {
                 BluetoothTemperatureSensor sensor = newSensors.get(entry.getKey());
-                Runnable task = sensor.getTemperatureUpdater();
+                TemperatureUpdater task = sensor.getTemperatureUpdater();
+                task.setCallback(temperatureUpdatedCallback);
                 sensor.setTemperatureUpdatdaterFuture(scheduledExecutor.scheduleAtFixedRate(task, 0, 1, TimeUnit.MINUTES));
                 logger.info("Adding " + sensor + " to sensors list");
                 sensors.put(entry.getKey(), entry.getValue());
@@ -197,7 +207,18 @@ public class Heating {
   }
 
   public class HeatingProcessor implements Runnable {
+    private LocalDateTime timeLastRun;
+    
+    public HeatingProcessor() {
+      timeLastRun = LocalDateTime.now();
+    }
+    
     public void run() {
+      if (Duration.between(timeLastRun, LocalDateTime.now()).minusMinutes(1).isNegative())
+        process();
+    }
+
+    public void process() {
       synchronized(boiler) {
         try {
           int minimumTemperature;
@@ -438,6 +459,7 @@ public class Heating {
           logger.catching(Level.ERROR, t);
         }
       }
+      timeLastRun = LocalDateTime.now();
     }
   }
 

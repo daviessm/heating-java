@@ -43,6 +43,7 @@ public class CalendarAdapter {
   protected UUID uuid;
   protected String resourceId;
   protected TemporalAmount updateInterval;
+  protected Runnable afterEventsUpdatedCallback;
 
   /** Directory to store user credentials for this application. */
   private static final java.io.File DATA_STORE_DIR = new java.io.File(
@@ -117,6 +118,11 @@ public class CalendarAdapter {
           .setApplicationName("heating-java")
           .build();
   }
+  
+  public CalendarAdapter(HeatingConfiguration config, Runnable afterEventsUpdatedCallback) throws IOException, HeatingException {
+    this(config);
+    this.afterEventsUpdatedCallback = afterEventsUpdatedCallback;
+  }
 
   public void update() throws IOException, HeatingException {
     DateTime now = new DateTime(System.currentTimeMillis());
@@ -149,6 +155,10 @@ public class CalendarAdapter {
     Watch watch = calendar.events().watch(calendarId, channel);
     Channel responseChannel = watch.execute();
     this.resourceId = responseChannel.getResourceId();
+
+    if (null != afterEventsUpdatedCallback) {
+      afterEventsUpdatedCallback.run();
+    }
   }
 
   public void stopWatching(String channelId, String resourceId) {
