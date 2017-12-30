@@ -29,6 +29,7 @@ public class HttpAdapter {
       
       handler.addServletWithMapping(new ServletHolder(new CurrentTempServlet(heating)), "/current_temp/*");
       handler.addServletWithMapping(new ServletHolder(new DesiredTempServlet(heating)), "/desired_temp");
+      handler.addServletWithMapping(new ServletHolder(new ProportionServlet(heating)), "/proportion");
       handler.addServletWithMapping(new ServletHolder(new ExternalWeatherServlet(heating)), "/weather/*");
       handler.addServletWithMapping(new ServletHolder(new StatusServlet(heating)), "/status/*");
       handler.addServletWithMapping(new ServletHolder(new RefreshServlet(heating)), "/refresh/*");

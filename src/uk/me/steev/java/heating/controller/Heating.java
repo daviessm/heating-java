@@ -44,6 +44,7 @@ public class Heating {
   protected HeatingProcessor processor;
   protected HttpAdapter httpAdapter;
   protected Float desiredTemperature;
+  protected Float proportion;
 
   public Heating(File configFile) throws HeatingException {
     try {
@@ -176,6 +177,14 @@ public class Heating {
     this.desiredTemperature = desiredTemperature;
   }
 
+  public Float getProportion() {
+    return proportion;
+  }
+
+  public void setProportion(Float proportion) {
+    this.proportion = proportion;
+  }
+
   public class SensorScanner implements Runnable {
     private Runnable temperatureUpdatedCallback;
 
@@ -240,6 +249,7 @@ public class Heating {
           }
 
           setDesiredTemperature((float) minimumTemperature);
+          setProportion(0f);
 
           //Do preheat first, it doesn't rely on temperature
           //Get a list of preheat events
@@ -293,6 +303,7 @@ public class Heating {
             if (LocalDateTime.now().isAfter(eventStartTime) &&
                 LocalDateTime.now().isBefore(eventEndTime)) {
               forcedOn = true;
+              setProportion((float) proportionalHeatingIntervalMinutes.getSeconds() / 60);
               logger.info("Heating forced on");
               try {
                 if (!boiler.isHeating())
@@ -419,6 +430,7 @@ public class Heating {
                   } else if (newProportionalTime.compareTo(proportionalHeatingIntervalMinutes) > 0) {
                     newProportionalTime = proportionalHeatingIntervalMinutes;
                   }
+                  setProportion((float) newProportionalTime.getSeconds() / 60);
 
                   if (boiler.isHeating()) {
                     LocalDateTime timeHeatingOn = boiler.getTimeHeatingOn();
