@@ -214,9 +214,6 @@ public class HeatingProcessor implements Runnable, Processable {
               if (null == timeDueOn)
                 timeDueOn = timesDueOn.get(0);
 
-              if (timeDueOn.getStartTime().isBefore(LocalDateTime.now()))
-                heating.setDesiredTemperature(timeDueOn.temperature);
-
               if (timeDueOn.getStartTime().isAfter(LocalDateTime.now()) &&
                   timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now()) &&
                   timeDueOn.getTemperature() < (double) currentTemperature + overshootDegrees &&
@@ -224,7 +221,13 @@ public class HeatingProcessor implements Runnable, Processable {
                   heating.getBoiler().isHeating()) {
                 logger.info("Warming up, temperature will reach desired point, turn off");
                 heating.getBoiler().stopHeating();
-              } else if (timeDueOn.getTemperature() > (double) currentTemperature + overshootDegrees &&
+              } else if (timeDueOn.getStartTime().isAfter(LocalDateTime.now()) &&
+                  timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now()) &&
+                  timeDueOn.getTemperature() < (double) currentTemperature + overshootDegrees &&
+                  timeDueOn.getTimeDueOn().plus(minimumActivePeriodMinutes).isBefore(LocalDateTime.now()) &&
+                  !heating.getBoiler().isHeating()) {
+                logger.info("Warming up, will overshoot, stay off");
+              } else if (timeDueOn.getTemperature() > (double) currentTemperature &&
                   timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
                 logger.debug("Current temperature " + currentTemperature +
                     " is below desired temperature " + timeDueOn.getTemperature() +
