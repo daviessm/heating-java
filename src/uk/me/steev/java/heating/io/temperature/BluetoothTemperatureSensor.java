@@ -16,6 +16,7 @@ import tinyb.BluetoothDevice;
 import tinyb.BluetoothGattCharacteristic;
 import tinyb.BluetoothGattService;
 import tinyb.BluetoothManager;
+import uk.me.steev.java.heating.utils.Processable;
 
 public abstract class BluetoothTemperatureSensor {
   static final Logger logger = LogManager.getLogger(BluetoothTemperatureSensor.class.getName());
@@ -303,7 +304,7 @@ public abstract class BluetoothTemperatureSensor {
   }
 
   public class TemperatureUpdater implements Runnable {
-    private Runnable callback;
+    private Processable callback;
     
     public void run() {
       synchronized(this) {
@@ -318,15 +319,15 @@ public abstract class BluetoothTemperatureSensor {
           logger.catching(Level.ERROR, t);
         }
         if (null != callback)
-          callback.run();
+          callback.process();
       }
     }
 
-    public Runnable getCallback() {
+    public Processable getCallback() {
       return callback;
     }
 
-    public void setCallback(Runnable callback) {
+    public void setCallback(Processable callback) {
       this.callback = callback;
     }
   }

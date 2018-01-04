@@ -33,6 +33,7 @@ import com.google.api.services.calendar.model.Event;
 
 import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
+import uk.me.steev.java.heating.utils.Processable;
 
 public class CalendarAdapter {
   static final Logger logger = LogManager.getLogger(CalendarAdapter.class.getName());
@@ -43,7 +44,7 @@ public class CalendarAdapter {
   protected UUID uuid;
   protected String resourceId;
   protected TemporalAmount updateInterval;
-  protected Runnable afterEventsUpdatedCallback;
+  protected Processable afterEventsUpdatedCallback;
 
   /** Directory to store user credentials for this application. */
   private static final java.io.File DATA_STORE_DIR = new java.io.File(
@@ -119,7 +120,7 @@ public class CalendarAdapter {
           .build();
   }
   
-  public CalendarAdapter(HeatingConfiguration config, Runnable afterEventsUpdatedCallback) throws IOException, HeatingException {
+  public CalendarAdapter(HeatingConfiguration config, Processable afterEventsUpdatedCallback) throws IOException, HeatingException {
     this(config);
     this.afterEventsUpdatedCallback = afterEventsUpdatedCallback;
   }
@@ -157,7 +158,7 @@ public class CalendarAdapter {
     this.resourceId = responseChannel.getResourceId();
 
     if (null != afterEventsUpdatedCallback) {
-      afterEventsUpdatedCallback.run();
+      afterEventsUpdatedCallback.process();
     }
   }
 

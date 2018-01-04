@@ -18,8 +18,9 @@ import com.google.api.services.calendar.model.Event;
 
 import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
+import uk.me.steev.java.heating.utils.Processable;
 
-public class HeatingProcessor implements Runnable {
+public class HeatingProcessor implements Runnable, Processable {
   static final Logger logger = LogManager.getLogger(HeatingProcessor.class.getName());
   private LocalDateTime timeLastRun;
   private Heating heating;
@@ -32,7 +33,7 @@ public class HeatingProcessor implements Runnable {
   }
   
   public void run() {
-    if (Duration.between(timeLastRun, LocalDateTime.now()).minusMinutes(1).isNegative())
+    if (!Duration.between(timeLastRun, LocalDateTime.now()).minusMinutes(1).isNegative())
       process();
   }
 

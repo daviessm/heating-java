@@ -21,6 +21,7 @@ import uk.me.steev.java.heating.io.boiler.RelayTypes;
 import uk.me.steev.java.heating.io.http.HttpAdapter;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor.TemperatureUpdater;
+import uk.me.steev.java.heating.utils.Processable;
 import uk.me.steev.java.heating.utils.ResubmittingScheduledExecutor;
 
 public class Heating {
@@ -177,9 +178,9 @@ public class Heating {
   }
 
   public class SensorScanner implements Runnable {
-    private Runnable temperatureUpdatedCallback;
+    private Processable temperatureUpdatedCallback;
 
-    public SensorScanner(Runnable temperatureUpdatedCallback) {
+    public SensorScanner(Processable temperatureUpdatedCallback) {
       this.temperatureUpdatedCallback = temperatureUpdatedCallback;
     }
 
