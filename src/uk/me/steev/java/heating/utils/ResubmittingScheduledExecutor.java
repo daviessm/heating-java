@@ -53,6 +53,7 @@ public class ResubmittingScheduledExecutor extends ScheduledThreadPoolExecutor {
         logger.catching(Level.WARN, cause);
       else
         logger.catching(Level.WARN, t);
+      logger.info("Resubmitting " + r.toString());
       this.schedule(r, 1, TimeUnit.MINUTES);
     }
   }
