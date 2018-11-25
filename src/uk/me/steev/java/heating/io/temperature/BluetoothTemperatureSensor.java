@@ -58,7 +58,7 @@ public abstract class BluetoothTemperatureSensor {
 
       LocalDateTime startTime = LocalDateTime.now();
       while (LocalDateTime.now().isBefore(startTime.plusSeconds(30))) {
-        if (this.device.isServiceResolved()) {
+        if (this.device.isServicesResolved()) {
           logger.debug("Got characteristics after " + ChronoUnit.MILLIS.between(startTime, LocalDateTime.now()) + "ms");
           break;
         }
@@ -68,7 +68,7 @@ public abstract class BluetoothTemperatureSensor {
           throw new BluetoothException("Interrupted in Thread.sleep()", ie);
         }
       }
-      if (!this.device.isServiceResolved()) {
+      if (!this.device.isServicesResolved()) {
         this.disconnect();
         throw new BluetoothException("Unable to get services for " + this.toString());
       }
