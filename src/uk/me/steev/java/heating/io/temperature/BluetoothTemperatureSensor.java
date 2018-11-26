@@ -30,6 +30,7 @@ public abstract class BluetoothTemperatureSensor {
   protected Float currentTemperature = null;
   protected LocalDateTime tempLastUpdated = null;
   protected LocalDateTime tempLastFailedUpdate = null;
+  protected LocalDateTime created = null;
   protected TemperatureUpdater temperatureUpdater = null;
   protected ScheduledFuture<?> temperatureUpdatdaterFuture = null;
 
@@ -41,6 +42,7 @@ public abstract class BluetoothTemperatureSensor {
 
     this.device = device;
     this.name = this.device.getName();
+    this.created = LocalDateTime.now();
   }
 
   private synchronized void populateServicesAndCharacteristics() throws BluetoothException {
@@ -283,7 +285,15 @@ public abstract class BluetoothTemperatureSensor {
     this.temperatureUpdatdaterFuture = temperatureUpdatdaterFuture;
   }
 
-  @Override
+  public LocalDateTime getCreated() {
+    return created;
+  }
+
+  public void setCreated(LocalDateTime created) {
+    this.created = created;
+  }
+
+@Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append("BluetoothTemperatureSensor ").append(name).append(" at ").append(this.device.getAddress())
