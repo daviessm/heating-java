@@ -103,7 +103,13 @@ public abstract class BluetoothTemperatureSensor {
 
   public synchronized void disconnect() {
     logger.warn("Disconnecting from " + this.toString());
+    BluetoothAdapter a = device.getAdapter();
     device.disconnect();
+    try {
+      a.removeDevice(device.getRawDevice());
+    } catch (DBusException dbe) {
+      logger.warn("Unable to remove device", dbe);
+    }
   }
 
   private synchronized void checkConnected() throws BluetoothException {
