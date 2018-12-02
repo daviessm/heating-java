@@ -57,7 +57,7 @@
 		<dependency>
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-calendar</artifactId>
-			<version>v3-rev20181023-1.27.0</version>
+			<version>v3-rev20181125-1.27.0</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
