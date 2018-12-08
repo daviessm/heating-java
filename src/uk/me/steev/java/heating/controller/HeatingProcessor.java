@@ -133,11 +133,21 @@ public class HeatingProcessor implements Runnable, Processable {
             BluetoothTemperatureSensor sensor = entry.getValue();
             LocalDateTime lastUpdated = sensor.getTempLastUpdated();
             LocalDateTime lastFailed = sensor.getTempLastFailedUpdate();
+            LocalDateTime created = sensor.getCreated();
             if (!(null == lastUpdated) &&
                 lastUpdated.isAfter(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
               allCurrentTemps.add(sensor.getCurrentTemperature());
             } else if (null == lastUpdated && null == lastFailed) {
-              logger.warn("Sensor time and failed time for " + sensor.toString() + " are null, ignoring (just created?)");
+              if (created.isBefore(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
+                logger.warn("Sensor  " + sensor.toString() + " was created more than three minutes ago and has never been polled, disconnecting");
+                sensor.disconnect();
+                sensor.getTemperatureUpdatdaterFuture().cancel(false);
+                synchronized (heating.getSensors()) {
+                  heating.getSensors().remove(entry.getKey());
+                }
+              } else {
+                logger.warn("Sensor time and failed time for " + sensor.toString() + " are null, ignoring (just created?)");
+              }
             } else {
               logger.warn("Sensor time for " + sensor.toString() + " is more than three minutes old, disconnecting");
               sensor.disconnect();

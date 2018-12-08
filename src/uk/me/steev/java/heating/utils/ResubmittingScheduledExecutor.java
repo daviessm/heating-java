@@ -39,7 +39,7 @@ public class ResubmittingScheduledExecutor extends ScheduledThreadPoolExecutor {
       try {
         ((Future<?>) r).get();
       } catch (CancellationException ce) {
-        t = ce;
+        t = null; //ignore, because we explicitly cancelled the task
       } catch (ExecutionException ee) {
         t = ee.getCause();
       } catch (InterruptedException ie) {

@@ -1,6 +1,6 @@
 package uk.me.steev.java.heating.io.temperature;
 
-import tinyb.BluetoothDevice;
+import com.github.hypfvieh.bluetooth.wrapper.BluetoothDevice;
 
 public class MetaWearSensor extends BluetoothTemperatureSensor {
   private byte[] RED_LED_ON_1 = new byte[]{
