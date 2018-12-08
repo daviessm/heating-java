@@ -58,8 +58,8 @@ public class HeatingProcessor implements Runnable, Processable {
           return;
         }
 
-        heating.setDesiredTemperature((float) minimumTemperature);
-        heating.setProportion(0f);
+        float desiredTemperature = minimumTemperature;
+        float proportion = 0f;
 
         //Do preheat first, it doesn't rely on temperature
         //Get a list of preheat events
@@ -113,7 +113,7 @@ public class HeatingProcessor implements Runnable, Processable {
           if (LocalDateTime.now().isAfter(eventStartTime) &&
               LocalDateTime.now().isBefore(eventEndTime)) {
             forcedOn = true;
-            heating.setProportion((float) proportionalHeatingIntervalMinutes.getSeconds() / 60);
+            proportion = (float) proportionalHeatingIntervalMinutes.getSeconds() / 60;
             logger.info("Heating forced on");
             try {
               if (!heating.getBoiler().isHeating())
@@ -213,7 +213,7 @@ public class HeatingProcessor implements Runnable, Processable {
               //Find if we need to warm up for any future events
               for (TemperatureEvent event : timesDueOn) {
                 if (event.getStartTime().isBefore(LocalDateTime.now())) {
-                  heating.setDesiredTemperature(event.temperature);
+                  desiredTemperature = event.temperature;
                   continue;
                 }
 
@@ -253,7 +253,7 @@ public class HeatingProcessor implements Runnable, Processable {
                 } else if (newProportionalTime.compareTo(proportionalHeatingIntervalMinutes) > 0) {
                   newProportionalTime = proportionalHeatingIntervalMinutes;
                 }
-                heating.setProportion((float) newProportionalTime.getSeconds() / 60);
+                proportion = (float) newProportionalTime.getSeconds() / 60;
 
                 if (heating.getBoiler().isHeating()) {
                   LocalDateTime timeHeatingOn = heating.getBoiler().getTimeHeatingOn();
@@ -289,6 +289,8 @@ public class HeatingProcessor implements Runnable, Processable {
           } catch (RelayException re) {
             logger.catching(Level.ERROR, re);
           }
+          heating.setDesiredTemperature(desiredTemperature);
+          heating.setProportion(proportion);
         }
       }  catch (Throwable t) {
         logger.catching(Level.ERROR, t);
