@@ -17,7 +17,7 @@ public class RefreshServlet extends HeatingServlet {
   public RefreshServlet(Heating heating) {
     super(heating);
   }
-  
+
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -28,8 +28,9 @@ public class RefreshServlet extends HeatingServlet {
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
       if (!("sync".equals(request.getHeader("X-Goog-Resource-State")))) {
         //logger.trace(request.getReader().lines().collect(Collectors.joining("\n")));
-        if (heating.getCalendar().getUuid().toString().equals(request.getHeader("X-Goog-Channel-ID"))) {
-          logger.info("Getting latest events");
+        String channelId = request.getHeader("X-Goog-Channel-ID");
+        if (heating.getCalendar().getUuid().toString().equals(channelId)) {
+          logger.info("Getting latest events for channel " + channelId);
           try {
             heating.getCalendar().update();
             //Run processing now in case a new event should already be in progress
@@ -38,7 +39,6 @@ public class RefreshServlet extends HeatingServlet {
             logger.catching(Level.WARN, he);
           }
         } else {
-          String channelId = request.getHeader("X-Goog-Channel-ID");
           String resourceId = request.getHeader("X-Goog-Resource-ID");
           logger.info("Stop watching " + channelId + " " + resourceId);
           heating.getCalendar().stopWatching(channelId, resourceId);

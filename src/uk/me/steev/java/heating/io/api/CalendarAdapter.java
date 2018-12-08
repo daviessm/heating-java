@@ -119,7 +119,7 @@ public class CalendarAdapter {
           .setApplicationName("heating-java")
           .build();
   }
-  
+
   public CalendarAdapter(HeatingConfiguration config, Processable afterEventsUpdatedCallback) throws IOException, HeatingException {
     this(config);
     this.afterEventsUpdatedCallback = afterEventsUpdatedCallback;

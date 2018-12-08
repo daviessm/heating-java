@@ -1,6 +1,6 @@
 package uk.me.steev.java.heating.io.temperature;
 
-import tinyb.BluetoothDevice;
+import com.github.hypfvieh.bluetooth.wrapper.BluetoothDevice;
 
 public class DummyTemperatureSensor extends BluetoothTemperatureSensor {
   protected DummyTemperatureSensor(BluetoothDevice device) throws BluetoothException {

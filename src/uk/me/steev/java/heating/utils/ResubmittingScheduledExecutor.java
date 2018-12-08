@@ -39,7 +39,7 @@ public class ResubmittingScheduledExecutor extends ScheduledThreadPoolExecutor {
       try {
         ((Future<?>) r).get();
       } catch (CancellationException ce) {
-        t = ce;
+        t = null; //ignore, because we explicitly cancelled the task
       } catch (ExecutionException ee) {
         t = ee.getCause();
       } catch (InterruptedException ie) {
@@ -53,6 +53,7 @@ public class ResubmittingScheduledExecutor extends ScheduledThreadPoolExecutor {
         logger.catching(Level.WARN, cause);
       else
         logger.catching(Level.WARN, t);
+      logger.info("Resubmitting " + r.toString());
       this.schedule(r, 1, TimeUnit.MINUTES);
     }
   }
