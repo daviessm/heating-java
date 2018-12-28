@@ -25,13 +25,13 @@ public class HeatingProcessor implements Runnable, Processable {
   private LocalDateTime timeLastRun;
   private Heating heating;
   private HeatingConfiguration config;
-  
+
   public HeatingProcessor(Heating heating, HeatingConfiguration config) {
     this.heating = heating;
     this.config = config;
     timeLastRun = LocalDateTime.now();
   }
-  
+
   public void run() {
     if (!Duration.between(timeLastRun, LocalDateTime.now()).minusMinutes(1).isNegative())
       process();
@@ -275,8 +275,12 @@ public class HeatingProcessor implements Runnable, Processable {
               } else {
                 logger.debug("No current demand for heating");
                 if (heating.getBoiler().isHeating()) {
-                  logger.debug("Boiler is on, turn off");
-                  heating.getBoiler().stopHeating();
+                  if (heating.getBoiler().getTimeHeatingOn().plus(minimumActivePeriodMinutes).isAfter(LocalDateTime.now())) {
+                      logger.debug("Boiler has not been on for minimum time, wait");
+                  } else {
+                      logger.debug("Boiler is on, turn off");
+                      heating.getBoiler().stopHeating();
+                  }
                 }
               }
             } else {
