@@ -24,6 +24,7 @@ import uk.me.steev.java.heating.utils.Processable;
 public abstract class BluetoothTemperatureSensor {
   static final Logger logger = LogManager.getLogger(BluetoothTemperatureSensor.class.getName());
   protected BluetoothDevice device = null;
+  protected String address = null;
   protected String name = null;
   protected List<BluetoothGattService> services = null;
   protected Map<String, BluetoothGattCharacteristic> characteristics = null;
@@ -40,6 +41,7 @@ public abstract class BluetoothTemperatureSensor {
     if (null == device)
       return;
 
+    this.address = device.getAddress();
     this.device = device;
     this.name = this.device.getName();
     this.created = LocalDateTime.now();
@@ -302,7 +304,7 @@ public abstract class BluetoothTemperatureSensor {
 @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("BluetoothTemperatureSensor ").append(name).append(" at ").append(this.device.getAddress())
+    builder.append("BluetoothTemperatureSensor ").append(name).append(" at ").append(this.address)
         .append(" [currentTemperature=").append(currentTemperature).append(", tempLastUpdated=").append(tempLastUpdated)
         .append(", tempLastFailedUpdate=").append(tempLastFailedUpdate).append("]");
     return builder.toString();
@@ -316,7 +318,7 @@ public abstract class BluetoothTemperatureSensor {
         try {
           try {
             updateTemperature();
-            logger.info("Got temperature " + currentTemperature + " for device " + device.getAddress());
+            logger.info("Got temperature " + currentTemperature + " for device " + address);
           } catch (BluetoothException be) {
             logger.catching(Level.WARN, be);
           }
