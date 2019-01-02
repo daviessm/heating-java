@@ -29,7 +29,9 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
     response.setContentType("application/json");
     JSONObject json = new JSONObject();
 
-    String pathInfo = request.getPathInfo().replaceFirst("/", "");
+    String pathInfo = null;
+    if (null != request.getPathInfo())
+      pathInfo = request.getPathInfo().replaceFirst("/", "");
     if (null != pathInfo && !"no_wait".equals(pathInfo)) {
       synchronized(heating) {
         try {
