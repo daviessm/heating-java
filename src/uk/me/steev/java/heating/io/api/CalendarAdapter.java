@@ -120,6 +120,7 @@ public class CalendarAdapter {
   }
 
   public CalendarAdapter(Processable afterEventsUpdatedCallback) throws IOException, HeatingException {
+    this();
     this.afterEventsUpdatedCallback = afterEventsUpdatedCallback;
   }
 
