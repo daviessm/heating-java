@@ -15,6 +15,8 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 import uk.me.steev.java.heating.controller.Heating;
+import uk.me.steev.java.heating.controller.HeatingConfiguration;
+import uk.me.steev.java.heating.controller.HeatingException;
 import uk.me.steev.java.heating.controller.TemperatureEvent;
 import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
@@ -71,15 +73,32 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
 
     json.put("currentsetpoint", heating.getDesiredTemperature());
     List<TemperatureEvent> timesDueOn = heating.getProcessor().getTimesDueOn();
+    TemperatureEvent next = null;
     if (null != timesDueOn && timesDueOn.size() > 0) {
       for (TemperatureEvent te : timesDueOn) {
+        next = te;
         if (te.getStartTime().isBefore(LocalDateTime.now()))
           continue;
   
-        json.put("nextsetpoint", te.getTemperature());
-        json.put("nexteventstart", te.getStartTime().toString());
         break;
       }
+    }
+
+    try {
+      if (null != next) {
+        if (next.getStartTime().isAfter(LocalDateTime.now())) {
+          json.put("nextsetpoint", next.getTemperature());
+          json.put("nexteventstart", next.getStartTime().toString());
+        } else {
+          json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
+          json.put("nexteventstart", next.getEndTime());
+        }
+      } else {
+        json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
+        json.put("nexteventstart", "Unknown");
+      }
+    } catch (HeatingException re) {
+      logger.catching(re);
     }
 
     json.put("override", heating.getOverrideDegrees());
