@@ -24,11 +24,10 @@ public class HeatingProcessor implements Runnable, Processable {
   static final Logger logger = LogManager.getLogger(HeatingProcessor.class.getName());
   private LocalDateTime timeLastRun;
   private Heating heating;
-  private HeatingConfiguration config;
+  private List<TemperatureEvent> timesDueOn;
 
-  public HeatingProcessor(Heating heating, HeatingConfiguration config) {
+  public HeatingProcessor(Heating heating) {
     this.heating = heating;
-    this.config = config;
     timeLastRun = LocalDateTime.now();
   }
 
@@ -39,6 +38,10 @@ public class HeatingProcessor implements Runnable, Processable {
 
   public void process() {
     synchronized(heating) {
+      LocalDateTime overrideEnd = heating.getOverrideEnd();
+      if (overrideEnd.isBefore(LocalDateTime.now())) {
+        heating.setOverrideDegrees(0f);
+      }
       try {
         int minimumTemperature;
         Duration minutesPerDegree;
@@ -47,12 +50,12 @@ public class HeatingProcessor implements Runnable, Processable {
         Duration minimumActivePeriodMinutes;
         double overshootDegrees;
         try {
-          minimumTemperature = config.getIntegerSetting("heating", "minimum_temperature");
-          minutesPerDegree = Duration.ofMinutes(config.getIntegerSetting("heating", "minutes_per_degree"));
-          effectDelayMinutes = Duration.ofMinutes(config.getIntegerSetting("heating", "effect_delay_minutes"));
-          proportionalHeatingIntervalMinutes = Duration.ofMinutes(config.getIntegerSetting("heating", "proportional_heating_interval_minutes"));
-          minimumActivePeriodMinutes = Duration.ofMinutes(config.getIntegerSetting("heating", "minimum_active_period_minutes"));
-          overshootDegrees = config.getDoubleSetting("heating", "overshoot_degrees");
+          minimumTemperature = HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature");
+          minutesPerDegree = Duration.ofMinutes(HeatingConfiguration.getIntegerSetting("heating", "minutes_per_degree"));
+          effectDelayMinutes = Duration.ofMinutes(HeatingConfiguration.getIntegerSetting("heating", "effect_delay_minutes"));
+          proportionalHeatingIntervalMinutes = Duration.ofMinutes(HeatingConfiguration.getIntegerSetting("heating", "proportional_heating_interval_minutes"));
+          minimumActivePeriodMinutes = Duration.ofMinutes(HeatingConfiguration.getIntegerSetting("heating", "minimum_active_period_minutes"));
+          overshootDegrees = HeatingConfiguration.getDoubleSetting("heating", "overshoot_degrees");
         } catch (HeatingException e) {
           logger.catching(Level.FATAL, e);
           return;
@@ -125,88 +128,112 @@ public class HeatingProcessor implements Runnable, Processable {
           }
         }
 
-        if (!forcedOn) {
-          //Now get latest temperatures
-          List<Float> allCurrentTemps = new ArrayList<>();
-          Float currentTemperature = null;
-          for (Entry<String,BluetoothTemperatureSensor> entry : heating.getSensors().entrySet()) {
-            BluetoothTemperatureSensor sensor = entry.getValue();
-            LocalDateTime lastUpdated = sensor.getTempLastUpdated();
-            LocalDateTime lastFailed = sensor.getTempLastFailedUpdate();
-            LocalDateTime created = sensor.getCreated();
-            if (!(null == lastUpdated) &&
-                lastUpdated.isAfter(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
-              allCurrentTemps.add(sensor.getCurrentTemperature());
-            } else if (null == lastUpdated && null == lastFailed) {
-              if (created.isBefore(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
-                logger.warn("Sensor  " + sensor.toString() + " was created more than three minutes ago and has never been polled, disconnecting");
-                sensor.disconnect();
-                sensor.getTemperatureUpdatdaterFuture().cancel(false);
-                synchronized (heating.getSensors()) {
-                  heating.getSensors().remove(entry.getKey());
-                }
-              } else {
-                logger.warn("Sensor time and failed time for " + sensor.toString() + " are null, ignoring (just created?)");
-              }
-            } else {
-              logger.warn("Sensor time for " + sensor.toString() + " is more than three minutes old, disconnecting");
+        //Now get latest temperatures
+        List<Float> allCurrentTemps = new ArrayList<>();
+        Float currentTemperature = null;
+        for (Entry<String,BluetoothTemperatureSensor> entry : heating.getSensors().entrySet()) {
+          BluetoothTemperatureSensor sensor = entry.getValue();
+          LocalDateTime lastUpdated = sensor.getTempLastUpdated();
+          LocalDateTime lastFailed = sensor.getTempLastFailedUpdate();
+          LocalDateTime created = sensor.getCreated();
+          if (!(null == lastUpdated) &&
+              lastUpdated.isAfter(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
+            allCurrentTemps.add(sensor.getCurrentTemperature());
+          } else if (null == lastUpdated && null == lastFailed) {
+            if (created.isBefore(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
+              logger.warn("Sensor  " + sensor.toString() + " was created more than three minutes ago and has never been polled, disconnecting");
               sensor.disconnect();
               sensor.getTemperatureUpdatdaterFuture().cancel(false);
               synchronized (heating.getSensors()) {
                 heating.getSensors().remove(entry.getKey());
               }
+            } else {
+              logger.warn("Sensor time and failed time for " + sensor.toString() + " are null, ignoring (just created?)");
+            }
+          } else {
+            logger.warn("Sensor time for " + sensor.toString() + " is more than three minutes old, disconnecting");
+            sensor.disconnect();
+            sensor.getTemperatureUpdatdaterFuture().cancel(false);
+            synchronized (heating.getSensors()) {
+              heating.getSensors().remove(entry.getKey());
             }
           }
-          allCurrentTemps.sort(null);
+        }
+        allCurrentTemps.sort(null);
 
-          logger.info("Current temperatures: " + allCurrentTemps.toString());
+        logger.info("Current temperatures: " + allCurrentTemps.toString());
 
-          if (allCurrentTemps.size() > 0)
-            currentTemperature = allCurrentTemps.get(0);
+        if (allCurrentTemps.size() > 0)
+          currentTemperature = allCurrentTemps.get(0);
 
-          if (null == currentTemperature) {
-            logger.warn("No current temperature from sensors");
+        if (null == currentTemperature) {
+          logger.warn("No current temperature from sensors");
+          return;
+        }
+        logger.debug("Current temperature is " + currentTemperature);
+
+        float overrideDegrees = heating.getOverrideDegrees();
+        try {
+          if (currentTemperature < minimumTemperature + overrideDegrees) {
+            logger.info("Current temperature " +
+              currentTemperature +
+              " is less than minimum temperature " +
+              minimumTemperature +
+              " (override by " +
+              overrideDegrees + ")");
+            if (!(heating.getBoiler().isHeating()))
+              heating.getBoiler().startHeating();
             return;
           }
-          logger.debug("Current temperature is " + currentTemperature);
+        } catch (RelayException re) {
+          logger.catching(Level.ERROR, re);
+        }
 
+        List<TemperatureEvent> timesDueOn = new ArrayList<>();
+        LocalDateTime goneOutUntilTime = heating.getGoneOutUntilTime();
+        if (null != goneOutUntilTime && goneOutUntilTime.isBefore(LocalDateTime.now())) {
+          goneOutUntilTime = null;
+          heating.setGoneOutUntilTime(null);
+        }
+
+        for (Event event : heating.getCalendar().getCachedEvents()) {
           try {
-            if (currentTemperature < minimumTemperature) {
-              logger.info("Current temperature " + currentTemperature + " is less than minimum temperature " + minimumTemperature + ". On.");
-              if (!(heating.getBoiler().isHeating()))
-                heating.getBoiler().startHeating();
-              return;
-            }
-          } catch (RelayException re) {
-            logger.catching(Level.ERROR, re);
-          }
-
-          List<TemperatureEvent> timesDueOn = new ArrayList<>();
-
-          for (Event event : heating.getCalendar().getCachedEvents()) {
-            try {
-              float eventTemperature = Float.parseFloat(event.getSummary());
-              LocalDateTime eventStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
-              LocalDateTime eventEndTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
-              if (eventStartTime.isBefore(LocalDateTime.now()) &&
-                  eventEndTime.isAfter(LocalDateTime.now())) {
+            float eventTemperature = Float.parseFloat(event.getSummary());
+            LocalDateTime eventStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
+            LocalDateTime eventEndTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
+            if (eventStartTime.isBefore(LocalDateTime.now()) &&
+                eventEndTime.isAfter(LocalDateTime.now())) {
+              //Block out the time from any events during the goneOutUntilTime
+              if (null != goneOutUntilTime &&
+                  goneOutUntilTime.isBefore(eventEndTime)) {
+                timesDueOn.add(new TemperatureEvent(goneOutUntilTime, goneOutUntilTime, eventEndTime, eventTemperature));
+              } else {
                 timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventEndTime, eventTemperature));
-              } else if (eventStartTime.isAfter(LocalDateTime.now())) {
-                if (eventTemperature > currentTemperature) {
-                  LocalDateTime newEventStartTime = eventStartTime.minus(effectDelayMinutes)
-                      .minusSeconds((long) (minutesPerDegree.toMinutes() * (eventTemperature - currentTemperature) * 60));
-                  timesDueOn.add(new TemperatureEvent(newEventStartTime, eventStartTime, eventEndTime, eventTemperature));
-                }
               }
-            } catch (NumberFormatException nfe) {
-              continue;
+            } else if (eventStartTime.isAfter(LocalDateTime.now())) {
+              if (null != goneOutUntilTime &&
+                  goneOutUntilTime.isAfter(eventStartTime)) {
+                eventStartTime = goneOutUntilTime;
+                if (eventStartTime.isAfter(eventEndTime))
+                  continue;
+              }
+              if (eventTemperature > currentTemperature) {
+                LocalDateTime newEventStartTime = eventStartTime.minus(effectDelayMinutes)
+                    .minusSeconds((long) (minutesPerDegree.toMinutes() * (eventTemperature - currentTemperature) * 60));
+                timesDueOn.add(new TemperatureEvent(newEventStartTime, eventStartTime, eventEndTime, eventTemperature));
+              }
             }
+          } catch (NumberFormatException nfe) {
+            continue;
           }
+        }
 
-          //Put the elements in order of soonest to latest
-          timesDueOn.sort(null);
-          logger.debug("Times due on: " + timesDueOn.toString());
+        //Put the elements in order of soonest to latest
+        timesDueOn.sort(null);
+        this.timesDueOn = timesDueOn;
+        logger.debug("Times due on: " + timesDueOn.toString());
 
+        if (!forcedOn) {
           try {
             if (timesDueOn.size() > 0) {
               TemperatureEvent timeDueOn = null;
@@ -237,39 +264,57 @@ public class HeatingProcessor implements Runnable, Processable {
                   timeDueOn.getTimeDueOn().plus(minimumActivePeriodMinutes).isBefore(LocalDateTime.now()) &&
                   !heating.getBoiler().isHeating()) {
                 logger.info("Warming up, will overshoot, stay off");
-              } else if (timeDueOn.getTemperature() > (double) currentTemperature &&
-                  timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
-                logger.debug("Current temperature " + currentTemperature +
-                    " is below desired temperature " + timeDueOn.getTemperature() +
-                    " in an event starting at " + timeDueOn.getStartTime() +
-                    " warming up from " + timeDueOn.getTimeDueOn());
-
-                Duration newProportionalTime = Duration.ofSeconds((long) ((timeDueOn.getTemperature() - currentTemperature) * proportionalHeatingIntervalMinutes.toMinutes() * 60));
-                if (timeDueOn.getStartTime().isAfter(LocalDateTime.now()) && timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
-                  logger.debug("Warm-up period, stay on until desired temp period starts");
-                  newProportionalTime = proportionalHeatingIntervalMinutes;
-                } else if (newProportionalTime.compareTo(minimumActivePeriodMinutes) < 0) {
-                  newProportionalTime = minimumActivePeriodMinutes;
-                } else if (newProportionalTime.compareTo(proportionalHeatingIntervalMinutes) > 0) {
-                  newProportionalTime = proportionalHeatingIntervalMinutes;
+              } else if (timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
+                if (!timeDueOn.getStartTime().isEqual(timeDueOn.getTimeDueOn())) {
+                  logger.debug("Warming up, setting override to 0");
+                  overrideDegrees = 0f;
                 }
-                proportion = (float) newProportionalTime.getSeconds() / 60;
+                if (timeDueOn.getTemperature() > (double) currentTemperature - overrideDegrees) {
+                  logger.debug("Current temperature " + currentTemperature +
+                      " overridden by " + overrideDegrees +
+                      " is below desired temperature " + timeDueOn.getTemperature() +
+                      " in an event starting at " + timeDueOn.getStartTime() +
+                      " warming up from  " + timeDueOn.getTimeDueOn());
+                  Duration newProportionalTime = Duration.ofSeconds((long) (
+                      (timeDueOn.getTemperature() - currentTemperature - overrideDegrees)
+                      * proportionalHeatingIntervalMinutes.toMinutes()
+                      * 60));
+                  if (timeDueOn.getStartTime().isAfter(LocalDateTime.now()) && timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
+                    logger.debug("Warm-up period, stay on until desired temp period starts");
+                    newProportionalTime = proportionalHeatingIntervalMinutes;
+                  } else if (newProportionalTime.compareTo(minimumActivePeriodMinutes) < 0) {
+                    newProportionalTime = minimumActivePeriodMinutes;
+                  } else if (newProportionalTime.compareTo(proportionalHeatingIntervalMinutes) > 0) {
+                    newProportionalTime = proportionalHeatingIntervalMinutes;
+                  }
+                  proportion = (float) newProportionalTime.getSeconds() / 60;
 
-                if (heating.getBoiler().isHeating()) {
-                  LocalDateTime timeHeatingOn = heating.getBoiler().getTimeHeatingOn();
-                  logger.debug("Heating is on - came on at " + timeHeatingOn + " and proportion is " + newProportionalTime);
-                  if (timeHeatingOn.plus(newProportionalTime).compareTo(LocalDateTime.now()) < 0) {
-                    heating.getBoiler().stopHeating();
-                    //Reschedule processor for when the proportional interval ends
-                    heating.getScheduledExecutor().schedule(this, newProportionalTime.toMillis(), TimeUnit.MILLISECONDS);
+                  if (heating.getBoiler().isHeating()) {
+                    LocalDateTime timeHeatingOn = heating.getBoiler().getTimeHeatingOn();
+                    logger.debug("Heating is on - came on at " + timeHeatingOn + " and proportion is " + newProportionalTime);
+                    if (timeHeatingOn.plus(newProportionalTime).compareTo(LocalDateTime.now()) < 0) {
+                      heating.getBoiler().stopHeating();
+                      //Reschedule processor for when the proportional interval ends
+                      heating.getScheduledExecutor().schedule(this, newProportionalTime.toMillis(), TimeUnit.MILLISECONDS);
+                    }
+                  } else {
+                    LocalDateTime timeHeatingOff = heating.getBoiler().getTimeHeatingOff();
+                    logger.debug("Heating is off - went off at " + timeHeatingOff + " and proportion is " + newProportionalTime);
+                    if (timeHeatingOff.plus(proportionalHeatingIntervalMinutes.minus(newProportionalTime)).compareTo(LocalDateTime.now()) < 0) {
+                      heating.getBoiler().startHeating();
+                      //Reschedule processor for when the proportional interval ends
+                      heating.getScheduledExecutor().schedule(this, newProportionalTime.toMillis(), TimeUnit.MILLISECONDS);
+                    }
                   }
                 } else {
-                  LocalDateTime timeHeatingOff = heating.getBoiler().getTimeHeatingOff();
-                  logger.debug("Heating is off - went off at " + timeHeatingOff + " and proportion is " + newProportionalTime);
-                  if (timeHeatingOff.plus(proportionalHeatingIntervalMinutes.minus(newProportionalTime)).compareTo(LocalDateTime.now()) < 0) {
-                    heating.getBoiler().startHeating();
-                    //Reschedule processor for when the proportional interval ends
-                    heating.getScheduledExecutor().schedule(this, newProportionalTime.toMillis(), TimeUnit.MILLISECONDS);
+                  logger.debug("In an event but warmer than the desired temperature");
+                  if (heating.getBoiler().isHeating()) {
+                    if (heating.getBoiler().getTimeHeatingOn().plus(minimumActivePeriodMinutes).isAfter(LocalDateTime.now())) {
+                        logger.debug("Boiler has not been on for minimum time, wait");
+                    } else {
+                        logger.debug("Boiler is on, turn off");
+                        heating.getBoiler().stopHeating();
+                    }
                   }
                 }
               } else {
@@ -299,7 +344,12 @@ public class HeatingProcessor implements Runnable, Processable {
       }  catch (Throwable t) {
         logger.catching(Level.ERROR, t);
       }
+      heating.notifyAll();
     }
     timeLastRun = LocalDateTime.now();
+  }
+
+  public List<TemperatureEvent> getTimesDueOn() {
+    return timesDueOn;
   }
 }

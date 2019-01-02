@@ -26,14 +26,17 @@ public class HttpAdapter {
       
       ServletHandler handler = new ServletHandler();
       server.setHandler(handler);
-      
+
       handler.addServletWithMapping(new ServletHolder(new CurrentTempServlet(heating)), "/current_temp/*");
       handler.addServletWithMapping(new ServletHolder(new DesiredTempServlet(heating)), "/desired_temp");
       handler.addServletWithMapping(new ServletHolder(new ProportionServlet(heating)), "/proportion");
       handler.addServletWithMapping(new ServletHolder(new ExternalWeatherServlet(heating)), "/weather/*");
       handler.addServletWithMapping(new ServletHolder(new StatusServlet(heating)), "/status/*");
       handler.addServletWithMapping(new ServletHolder(new RefreshServlet(heating)), "/refresh/*");
-      
+      handler.addServletWithMapping(new ServletHolder(new AllDetailsAfterProcessServlet(heating)), "/all_details/*");
+      handler.addServletWithMapping(new ServletHolder(new SetOverrideServlet(heating)), "/override/*");
+      handler.addServletWithMapping(new ServletHolder(new SetGoneOutUntilServlet(heating)), "/gone_out_until/*");
+
       server.setRequestLog(new AccessLogHandler());
       server.start();
 
@@ -41,14 +44,14 @@ public class HttpAdapter {
       logger.error(e);
     }
   }
-  
+
   public static HttpAdapter getHttpAdapter(Heating heating) {
     if (null == HttpAdapter.SINGLETON)
       HttpAdapter.SINGLETON = new HttpAdapter(heating);
     
     return HttpAdapter.SINGLETON;
   }
-  
+
   public class AccessLogHandler extends AbstractNCSARequestLog {
     private Logger logger = LogManager.getLogger(AccessLogHandler.class.getName());
     @Override

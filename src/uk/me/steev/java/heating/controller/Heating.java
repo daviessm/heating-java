@@ -2,6 +2,7 @@ package uk.me.steev.java.heating.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +27,6 @@ import uk.me.steev.java.heating.utils.ResubmittingScheduledExecutor;
 
 public class Heating {
   static final Logger logger = LogManager.getLogger(Heating.class.getName());
-  protected HeatingConfiguration config;
   protected Boiler boiler;
   protected WeatherAdapter weather;
   protected CalendarAdapter calendar;
@@ -37,25 +37,28 @@ public class Heating {
   protected HttpAdapter httpAdapter;
   protected Float desiredTemperature;
   protected Float proportion;
+  protected Float overrideDegrees = 0f;
+  protected LocalDateTime overrideEnd = LocalDateTime.now();
+  protected LocalDateTime goneOutUntilTime = null;
 
   public Heating(File configFile) throws HeatingException {
     try {
-      //Get configuration
-      this.config = HeatingConfiguration.getConfiguration(configFile);
+      //Set up configuration
+      HeatingConfiguration.getConfiguration(configFile);
 
       //Set up relays
-      Relay heatingRelay = Relay.findRelay(RelayTypes.USB_1, config.getRelay("heating"));
-      Relay preheatRelay = Relay.findRelay(RelayTypes.USB_1, config.getRelay("preheat"));
+      Relay heatingRelay = Relay.findRelay(RelayTypes.USB_1, HeatingConfiguration.getRelay("heating"));
+      Relay preheatRelay = Relay.findRelay(RelayTypes.USB_1, HeatingConfiguration.getRelay("preheat"));
       this.boiler = new Boiler(heatingRelay, preheatRelay);
 
       //Set up event processor
-      this.processor = new HeatingProcessor(this, this.config);
+      this.processor = new HeatingProcessor(this);
 
       //Set up weather API
-      this.weather = new WeatherAdapter(this.config);
+      this.weather = new WeatherAdapter();
 
       //Set up events API
-      this.calendar = new CalendarAdapter(this.config, this.processor);
+      this.calendar = new CalendarAdapter(this.processor);
 
       //Set up an empty set of temperature sensors
       this.sensors = new ConcurrentHashMap<>();
@@ -87,14 +90,6 @@ public class Heating {
 
     //Process the whole lot every minute
     this.scheduledExecutor.scheduleWithFixedDelay(this.processor, 0, 1, TimeUnit.MINUTES);
-  }
-
-  public HeatingConfiguration getConfig() {
-    return config;
-  }
-
-  public void setConfig(HeatingConfiguration config) {
-    this.config = config;
   }
 
   public Boiler getBoiler() {
@@ -177,6 +172,30 @@ public class Heating {
     this.proportion = proportion;
   }
 
+  public Float getOverrideDegrees() {
+    return overrideDegrees;
+  }
+
+  public void setOverrideDegrees(Float overrideDegrees) {
+    this.overrideDegrees = overrideDegrees;
+  }
+
+  public LocalDateTime getOverrideEnd() {
+    return overrideEnd;
+  }
+
+  public void setOverrideEnd(LocalDateTime overrideEnd) {
+    this.overrideEnd = overrideEnd;
+  }
+
+  public LocalDateTime getGoneOutUntilTime() {
+    return goneOutUntilTime;
+  }
+
+  public void setGoneOutUntilTime(LocalDateTime goneOutUntilTime) {
+    this.goneOutUntilTime = goneOutUntilTime;
+  }
+
   public class SensorScanner implements Runnable {
     private Processable temperatureUpdatedCallback;
 
@@ -210,7 +229,7 @@ public class Heating {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("Heating [config=").append(config).append(", boiler=").append(boiler).append(", weather=")
+    builder.append("Heating [config=").append(", boiler=").append(boiler).append(", weather=")
         .append(weather).append(", calendar=").append(calendar).append(", sensors=").append(sensors)
         .append(", scheduledExecutor=").append(scheduledExecutor).append(", scanner=").append(scanner)
         .append(", processor=").append(processor).append(", httpAdapter=").append(httpAdapter)

@@ -33,7 +33,7 @@ public class HeatingConfiguration {
     }
   }
 
-  public String getStringSetting(String category, String setting) throws HeatingException {
+  public static String getStringSetting(String category, String setting) throws HeatingException {
     try {
       return CONFIGURATION.getJSONObject(category).getString(setting);
     } catch (JSONException jsone) {
@@ -41,7 +41,7 @@ public class HeatingConfiguration {
     }
   }
 
-  public int getIntegerSetting(String category, String setting) throws HeatingException {
+  public static int getIntegerSetting(String category, String setting) throws HeatingException {
     try {
       return CONFIGURATION.getJSONObject(category).getInt(setting);
     } catch (JSONException jsone) {
@@ -49,7 +49,7 @@ public class HeatingConfiguration {
     }
   }
 
-  public double getDoubleSetting(String category, String setting) throws HeatingException {
+  public static double getDoubleSetting(String category, String setting) throws HeatingException {
     try {
       return CONFIGURATION.getJSONObject(category).getDouble(setting);
     } catch (JSONException jsone) {
@@ -57,7 +57,7 @@ public class HeatingConfiguration {
     }
   }
 
-  public String[] getRelay(String name) throws HeatingException {
+  public static String[] getRelay(String name) throws HeatingException {
     try {
       JSONArray result = CONFIGURATION.getJSONObject("relays").getJSONArray(name);
       ArrayList<String> strings = new ArrayList<String>();

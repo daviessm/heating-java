@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Control Centre</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="jquery-clock-timepicker.js"></script>
+  <script src="moment.js"></script>
+  <script src="script.js"></script>
+  <style>
+   body {
+   }
+
+   br {
+    clear: both;
+   }
+
+   div.normal {
+    width: 100%;
+    margin-bottom: 35px;
+    font-size: 200%;
+    text-align: center;
+    font-family: sans-serif;
+   }
+
+   div.kitchen {
+    width: 25%;
+    float: left;
+    color: blue;
+   }
+
+   div.lounge {
+    width: 25%;
+    float: left;
+    color: red;
+   }
+
+   div.bedroom {
+    width: 25%;
+    float: left;
+    color: orange;
+   }
+
+   div.office {
+    width: 25%;
+    float: left;
+    color: purple;
+   }
+
+   div.setpoint {
+    width: 38%;
+    float: left;
+   }
+
+   div.nextsetpoint {
+    width: 18%;
+    float: left;
+   }
+
+   div.nexttime {
+    width: 44%;
+    float: left;
+   }
+
+   .black {
+    color: black !important;
+   }
+
+   .big {
+    font-size: 40px;
+   }
+
+   .heatingstatus {
+    float: left;
+    width: 49%;
+    border: 1px solid black;
+   }
+
+   .bgwhite {
+    background-color: white;
+   }
+
+   .bgorange {
+    background-color: orange;
+   }
+
+   .bgred {
+    background-color: red;
+   }
+
+   div.override {
+    text-align: center;
+    margin: 0 auto;
+    height: 60px;
+   }
+
+   .button {
+    display: inline-block;
+    border: 1px solid #ddd;
+    background: #eee;
+    user-select: none;
+    width: 2em;
+    height: 100%;
+    padding-top: 20px;
+   }
+
+   div.decrease {
+    margin-right: -8px;
+    border-radius: 8px 0 0 8px;
+   }
+
+   div.increase {
+    margin-left: -8px;
+    border-radius: 0 8px 8px 0;
+   }
+
+   div.overridetext {
+    display: inline-block;
+    border: 1px solid #ddd;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    padding-top: 20px;
+    padding-right: 10px;
+    padding-left: 10px;
+    height: 100%;
+   }
+
+  </style>
+ </head>
+
+ <body>
+  <div class="normal">
+   <div class="kitchen black">Kitchen</div>
+   <div class="lounge black">Lounge</div>
+   <div class="bedroom black">Bedroom</div>
+   <div class="office black">Office</div>
+   <br />
+   <div id="kitchentemp" class="kitchen big">12.1&deg;</div>
+   <div id="loungetemp" class="lounge big">15.2&deg;</div>
+   <div id="bedroomtemp" class="bedroom big">19.2&deg;</div>
+   <div id="officetemp" class="office big">20.4&deg;</div>
+  </div>
+  <br />
+  <div class="normal">
+   <div id="heatingstatus" class="bgwhite heatingstatus">Heating: Off</div>
+   <div id="preheatstatus" class="bgwhite heatingstatus">Preheat: Off</div>
+  </div>
+  <br />
+  <div class="normal">
+   <div class="setpoint">Set point</div>
+   <div class="nextsetpoint">Next</div>
+   <div class="eventtime">At</div>
+   <div id="currentsetpoint" class="setpoint big">NaN</div>
+   <div id="nextsetpoint" class="nextsetpoint big">NaN</div>
+   <div id="nexteventstart" class="eventtime">Unknown</div>
+  </div>
+  <br />
+  <div class="normal override">
+   <div id="decrease" class="decrease button">-</div>
+   <div id="override" class="overridetext">Override by 0.0&deg;</div>
+   <div id="increase" class="increase button">+</div>
+  </div>
+  <br />
+  <div class="normal">
+   Out until:
+   <input id="goneoutuntil" type="text" value="" />
+   <input id="clear" type="button" value="Clear" />
+  </div>
+ </body>
+</html>
