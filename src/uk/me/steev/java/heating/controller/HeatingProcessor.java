@@ -299,8 +299,8 @@ public class HeatingProcessor implements Runnable, Processable {
       }  catch (Throwable t) {
         logger.catching(Level.ERROR, t);
       }
+      heating.notifyAll();
     }
     timeLastRun = LocalDateTime.now();
-    heating.notifyAll();
   }
 }
