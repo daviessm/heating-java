@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 import uk.me.steev.java.heating.controller.Heating;
+import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 
 public class AllDetailsAfterProcessServlet extends HeatingServlet {
@@ -50,6 +51,13 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
       temps.put(sensors.get(s).getName(), sensors.get(s).getCurrentTemperature());
     }
     json.put("temps", temps);
+
+    try {
+      json.put("heating", heating.getBoiler().isHeating());
+      json.put("preheat", heating.getBoiler().isPreheating());
+    } catch (RelayException re) {
+      logger.catching(re);
+    }
     response.setStatus(HttpServletResponse.SC_OK);
     response.getWriter().println(json.toString(2));
   }
