@@ -30,7 +30,7 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
     JSONObject json = new JSONObject();
 
     String pathInfo = request.getPathInfo().replaceFirst("/", "");
-    if (!"no_wait".equals(pathInfo)) {
+    if (null != pathInfo && !"no_wait".equals(pathInfo)) {
       synchronized(heating) {
         try {
           heating.wait();
