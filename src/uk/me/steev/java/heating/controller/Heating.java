@@ -39,6 +39,7 @@ public class Heating {
   protected Float proportion;
   protected Float overrideDegrees = 0f;
   protected LocalDateTime overrideEnd = LocalDateTime.now();
+  protected LocalDateTime goneOutUntilTime = null;
 
   public Heating(File configFile) throws HeatingException {
     try {
@@ -185,6 +186,14 @@ public class Heating {
 
   public void setOverrideEnd(LocalDateTime overrideEnd) {
     this.overrideEnd = overrideEnd;
+  }
+
+  public LocalDateTime getGoneOutUntilTime() {
+    return goneOutUntilTime;
+  }
+
+  public void setGoneOutUntilTime(LocalDateTime goneOutUntilTime) {
+    this.goneOutUntilTime = goneOutUntilTime;
   }
 
   public class SensorScanner implements Runnable {

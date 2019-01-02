@@ -190,6 +190,7 @@ public class HeatingProcessor implements Runnable, Processable {
         }
 
         List<TemperatureEvent> timesDueOn = new ArrayList<>();
+        LocalDateTime goneOutUntilTime = heating.getGoneOutUntilTime();
 
         for (Event event : heating.getCalendar().getCachedEvents()) {
           try {
@@ -198,8 +199,20 @@ public class HeatingProcessor implements Runnable, Processable {
             LocalDateTime eventEndTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
             if (eventStartTime.isBefore(LocalDateTime.now()) &&
                 eventEndTime.isAfter(LocalDateTime.now())) {
-              timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventEndTime, eventTemperature));
+              //Block out the time from any events during the goneOutUntilTime
+              if (null != goneOutUntilTime &&
+                  goneOutUntilTime.isBefore(eventEndTime)) {
+                timesDueOn.add(new TemperatureEvent(goneOutUntilTime, goneOutUntilTime, eventEndTime, eventTemperature));
+              } else {
+                timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventEndTime, eventTemperature));
+              }
             } else if (eventStartTime.isAfter(LocalDateTime.now())) {
+              if (null != goneOutUntilTime &&
+                  goneOutUntilTime.isAfter(eventStartTime)) {
+                eventStartTime = goneOutUntilTime;
+                if (eventStartTime.isAfter(eventEndTime))
+                  continue;
+              }
               if (eventTemperature > currentTemperature) {
                 LocalDateTime newEventStartTime = eventStartTime.minus(effectDelayMinutes)
                     .minusSeconds((long) (minutesPerDegree.toMinutes() * (eventTemperature - currentTemperature) * 60));
