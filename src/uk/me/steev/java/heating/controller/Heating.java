@@ -178,6 +178,7 @@ public class Heating {
 
   public void setOverrideDegrees(Float overrideDegrees) {
     this.overrideDegrees = overrideDegrees;
+    this.processor.process();
   }
 
   public LocalDateTime getOverrideEnd() {
@@ -194,6 +195,7 @@ public class Heating {
 
   public void setGoneOutUntilTime(LocalDateTime goneOutUntilTime) {
     this.goneOutUntilTime = goneOutUntilTime;
+    this.processor.process();
   }
 
   public class SensorScanner implements Runnable {
