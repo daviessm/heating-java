@@ -19,6 +19,8 @@ import com.github.hypfvieh.bluetooth.wrapper.BluetoothDevice;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothGattCharacteristic;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothGattService;
 
+import uk.me.steev.java.heating.controller.HeatingConfiguration;
+import uk.me.steev.java.heating.controller.HeatingException;
 import uk.me.steev.java.heating.utils.Processable;
 
 public abstract class BluetoothTemperatureSensor {
@@ -43,8 +45,15 @@ public abstract class BluetoothTemperatureSensor {
 
     this.address = device.getAddress();
     this.device = device;
-    this.name = this.device.getName();
     this.created = LocalDateTime.now();
+    try {
+      this.name = HeatingConfiguration.getStringSetting("sensors", this.address);
+    } catch (HeatingException he) {
+      //Address/name mapping not found
+      logger.warn("Unable to find mapping for Bluetooth address " + this.address);
+      logger.catching(he);
+      this.name = device.getName();
+    }
   }
 
   private synchronized void populateServicesAndCharacteristics() throws BluetoothException {
