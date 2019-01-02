@@ -43,6 +43,7 @@ public class SetOverrideServlet extends HeatingServlet {
       }
 
       heating.setOverrideDegrees(overrideDegrees);
+      heating.getProcessor().process();
 
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }

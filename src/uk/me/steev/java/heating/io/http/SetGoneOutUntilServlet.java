@@ -31,6 +31,7 @@ public class SetGoneOutUntilServlet extends HeatingServlet {
       LocalDateTime goneOutUntilTime = LocalDateTime.parse(pathInfo);
 
       heating.setGoneOutUntilTime(goneOutUntilTime);
+      heating.getProcessor().process();
 
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else {
