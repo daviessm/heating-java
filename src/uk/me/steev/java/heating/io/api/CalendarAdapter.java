@@ -78,13 +78,12 @@ public class CalendarAdapter {
       }
   }
 
-  public CalendarAdapter(HeatingConfiguration config) throws IOException, HeatingException {
-    this.config = config;
+  public CalendarAdapter() throws IOException, HeatingException {
     cachedEvents = new ArrayList<Event>(10);
     eventsUpdater = new EventsUpdater();
 
     try {
-      int intervalSeconds = config.getIntegerSetting("calendar", "update_calendar_interval_seconds");
+      int intervalSeconds = HeatingConfiguration.getIntegerSetting("calendar", "update_calendar_interval_seconds");
       updateInterval = Duration.ofSeconds(intervalSeconds);
     } catch (HeatingException he) {
       logger.catching(Level.FATAL, he);
@@ -96,8 +95,8 @@ public class CalendarAdapter {
     logger.trace("Loading client secrets");
     GoogleClientSecrets clientSecrets = new GoogleClientSecrets()
       .setInstalled(new GoogleClientSecrets.Details()
-        .setClientId(config.getStringSetting("calendar", "client_id"))
-        .setClientSecret(config.getStringSetting("calendar", "client_secret"))
+        .setClientId(HeatingConfiguration.getStringSetting("calendar", "client_id"))
+        .setClientSecret(HeatingConfiguration.getStringSetting("calendar", "client_secret"))
         .setTokenUri("https://accounts.google.com/o/oauth2/token")
         .setRedirectUris(redirectURLs)
         .setAuthUri("https://accounts.google.com/o/oauth2/auth"));
@@ -120,16 +119,15 @@ public class CalendarAdapter {
           .build();
   }
 
-  public CalendarAdapter(HeatingConfiguration config, Processable afterEventsUpdatedCallback) throws IOException, HeatingException {
-    this(config);
+  public CalendarAdapter(Processable afterEventsUpdatedCallback) throws IOException, HeatingException {
     this.afterEventsUpdatedCallback = afterEventsUpdatedCallback;
   }
 
   public void update() throws IOException, HeatingException {
     DateTime now = new DateTime(System.currentTimeMillis());
 
-    String calendarId = config.getStringSetting("calendar", "calendar_id");
-    String refreshAddress = config.getStringSetting("calendar", "refresh_address");
+    String calendarId = HeatingConfiguration.getStringSetting("calendar", "calendar_id");
+    String refreshAddress = HeatingConfiguration.getStringSetting("calendar", "refresh_address");
 
     if (!(null == this.uuid) &&
         !(null == this.resourceId)) {

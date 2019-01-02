@@ -24,11 +24,9 @@ public class HeatingProcessor implements Runnable, Processable {
   static final Logger logger = LogManager.getLogger(HeatingProcessor.class.getName());
   private LocalDateTime timeLastRun;
   private Heating heating;
-  private HeatingConfiguration config;
 
-  public HeatingProcessor(Heating heating, HeatingConfiguration config) {
+  public HeatingProcessor(Heating heating) {
     this.heating = heating;
-    this.config = config;
     timeLastRun = LocalDateTime.now();
   }
 
@@ -47,12 +45,12 @@ public class HeatingProcessor implements Runnable, Processable {
         Duration minimumActivePeriodMinutes;
         double overshootDegrees;
         try {
-          minimumTemperature = config.getIntegerSetting("heating", "minimum_temperature");
-          minutesPerDegree = Duration.ofMinutes(config.getIntegerSetting("heating", "minutes_per_degree"));
-          effectDelayMinutes = Duration.ofMinutes(config.getIntegerSetting("heating", "effect_delay_minutes"));
-          proportionalHeatingIntervalMinutes = Duration.ofMinutes(config.getIntegerSetting("heating", "proportional_heating_interval_minutes"));
-          minimumActivePeriodMinutes = Duration.ofMinutes(config.getIntegerSetting("heating", "minimum_active_period_minutes"));
-          overshootDegrees = config.getDoubleSetting("heating", "overshoot_degrees");
+          minimumTemperature = HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature");
+          minutesPerDegree = Duration.ofMinutes(HeatingConfiguration.getIntegerSetting("heating", "minutes_per_degree"));
+          effectDelayMinutes = Duration.ofMinutes(HeatingConfiguration.getIntegerSetting("heating", "effect_delay_minutes"));
+          proportionalHeatingIntervalMinutes = Duration.ofMinutes(HeatingConfiguration.getIntegerSetting("heating", "proportional_heating_interval_minutes"));
+          minimumActivePeriodMinutes = Duration.ofMinutes(HeatingConfiguration.getIntegerSetting("heating", "minimum_active_period_minutes"));
+          overshootDegrees = HeatingConfiguration.getDoubleSetting("heating", "overshoot_degrees");
         } catch (HeatingException e) {
           logger.catching(Level.FATAL, e);
           return;
