@@ -191,6 +191,10 @@ public class HeatingProcessor implements Runnable, Processable {
 
         List<TemperatureEvent> timesDueOn = new ArrayList<>();
         LocalDateTime goneOutUntilTime = heating.getGoneOutUntilTime();
+        if (null != goneOutUntilTime && goneOutUntilTime.isBefore(LocalDateTime.now())) {
+          goneOutUntilTime = null;
+          heating.setGoneOutUntilTime(null);
+        }
 
         for (Event event : heating.getCalendar().getCachedEvents()) {
           try {
