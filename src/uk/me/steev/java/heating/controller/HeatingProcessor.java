@@ -124,89 +124,89 @@ public class HeatingProcessor implements Runnable, Processable {
           }
         }
 
-        if (!forcedOn) {
-          //Now get latest temperatures
-          List<Float> allCurrentTemps = new ArrayList<>();
-          Float currentTemperature = null;
-          for (Entry<String,BluetoothTemperatureSensor> entry : heating.getSensors().entrySet()) {
-            BluetoothTemperatureSensor sensor = entry.getValue();
-            LocalDateTime lastUpdated = sensor.getTempLastUpdated();
-            LocalDateTime lastFailed = sensor.getTempLastFailedUpdate();
-            LocalDateTime created = sensor.getCreated();
-            if (!(null == lastUpdated) &&
-                lastUpdated.isAfter(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
-              allCurrentTemps.add(sensor.getCurrentTemperature());
-            } else if (null == lastUpdated && null == lastFailed) {
-              if (created.isBefore(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
-                logger.warn("Sensor  " + sensor.toString() + " was created more than three minutes ago and has never been polled, disconnecting");
-                sensor.disconnect();
-                sensor.getTemperatureUpdatdaterFuture().cancel(false);
-                synchronized (heating.getSensors()) {
-                  heating.getSensors().remove(entry.getKey());
-                }
-              } else {
-                logger.warn("Sensor time and failed time for " + sensor.toString() + " are null, ignoring (just created?)");
-              }
-            } else {
-              logger.warn("Sensor time for " + sensor.toString() + " is more than three minutes old, disconnecting");
+        //Now get latest temperatures
+        List<Float> allCurrentTemps = new ArrayList<>();
+        Float currentTemperature = null;
+        for (Entry<String,BluetoothTemperatureSensor> entry : heating.getSensors().entrySet()) {
+          BluetoothTemperatureSensor sensor = entry.getValue();
+          LocalDateTime lastUpdated = sensor.getTempLastUpdated();
+          LocalDateTime lastFailed = sensor.getTempLastFailedUpdate();
+          LocalDateTime created = sensor.getCreated();
+          if (!(null == lastUpdated) &&
+              lastUpdated.isAfter(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
+            allCurrentTemps.add(sensor.getCurrentTemperature());
+          } else if (null == lastUpdated && null == lastFailed) {
+            if (created.isBefore(LocalDateTime.now().minus(3, ChronoUnit.MINUTES))) {
+              logger.warn("Sensor  " + sensor.toString() + " was created more than three minutes ago and has never been polled, disconnecting");
               sensor.disconnect();
               sensor.getTemperatureUpdatdaterFuture().cancel(false);
               synchronized (heating.getSensors()) {
                 heating.getSensors().remove(entry.getKey());
               }
+            } else {
+              logger.warn("Sensor time and failed time for " + sensor.toString() + " are null, ignoring (just created?)");
+            }
+          } else {
+            logger.warn("Sensor time for " + sensor.toString() + " is more than three minutes old, disconnecting");
+            sensor.disconnect();
+            sensor.getTemperatureUpdatdaterFuture().cancel(false);
+            synchronized (heating.getSensors()) {
+              heating.getSensors().remove(entry.getKey());
             }
           }
-          allCurrentTemps.sort(null);
+        }
+        allCurrentTemps.sort(null);
 
-          logger.info("Current temperatures: " + allCurrentTemps.toString());
+        logger.info("Current temperatures: " + allCurrentTemps.toString());
 
-          if (allCurrentTemps.size() > 0)
-            currentTemperature = allCurrentTemps.get(0);
+        if (allCurrentTemps.size() > 0)
+          currentTemperature = allCurrentTemps.get(0);
 
-          if (null == currentTemperature) {
-            logger.warn("No current temperature from sensors");
+        if (null == currentTemperature) {
+          logger.warn("No current temperature from sensors");
+          return;
+        }
+        logger.debug("Current temperature is " + currentTemperature);
+
+        try {
+          if (currentTemperature < minimumTemperature) {
+            logger.info("Current temperature " + currentTemperature + " is less than minimum temperature " + minimumTemperature + ". On.");
+            if (!(heating.getBoiler().isHeating()))
+              heating.getBoiler().startHeating();
             return;
           }
-          logger.debug("Current temperature is " + currentTemperature);
+        } catch (RelayException re) {
+          logger.catching(Level.ERROR, re);
+        }
 
+        List<TemperatureEvent> timesDueOn = new ArrayList<>();
+
+        for (Event event : heating.getCalendar().getCachedEvents()) {
           try {
-            if (currentTemperature < minimumTemperature) {
-              logger.info("Current temperature " + currentTemperature + " is less than minimum temperature " + minimumTemperature + ". On.");
-              if (!(heating.getBoiler().isHeating()))
-                heating.getBoiler().startHeating();
-              return;
-            }
-          } catch (RelayException re) {
-            logger.catching(Level.ERROR, re);
-          }
-
-          List<TemperatureEvent> timesDueOn = new ArrayList<>();
-
-          for (Event event : heating.getCalendar().getCachedEvents()) {
-            try {
-              float eventTemperature = Float.parseFloat(event.getSummary());
-              LocalDateTime eventStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
-              LocalDateTime eventEndTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
-              if (eventStartTime.isBefore(LocalDateTime.now()) &&
-                  eventEndTime.isAfter(LocalDateTime.now())) {
-                timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventEndTime, eventTemperature));
-              } else if (eventStartTime.isAfter(LocalDateTime.now())) {
-                if (eventTemperature > currentTemperature) {
-                  LocalDateTime newEventStartTime = eventStartTime.minus(effectDelayMinutes)
-                      .minusSeconds((long) (minutesPerDegree.toMinutes() * (eventTemperature - currentTemperature) * 60));
-                  timesDueOn.add(new TemperatureEvent(newEventStartTime, eventStartTime, eventEndTime, eventTemperature));
-                }
+            float eventTemperature = Float.parseFloat(event.getSummary());
+            LocalDateTime eventStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getStart().getDateTime().getValue()), ZoneId.systemDefault());
+            LocalDateTime eventEndTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getEnd().getDateTime().getValue()), ZoneId.systemDefault());
+            if (eventStartTime.isBefore(LocalDateTime.now()) &&
+                eventEndTime.isAfter(LocalDateTime.now())) {
+              timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventEndTime, eventTemperature));
+            } else if (eventStartTime.isAfter(LocalDateTime.now())) {
+              if (eventTemperature > currentTemperature) {
+                LocalDateTime newEventStartTime = eventStartTime.minus(effectDelayMinutes)
+                    .minusSeconds((long) (minutesPerDegree.toMinutes() * (eventTemperature - currentTemperature) * 60));
+                timesDueOn.add(new TemperatureEvent(newEventStartTime, eventStartTime, eventEndTime, eventTemperature));
               }
-            } catch (NumberFormatException nfe) {
-              continue;
             }
+          } catch (NumberFormatException nfe) {
+            continue;
           }
+        }
 
-          //Put the elements in order of soonest to latest
-          timesDueOn.sort(null);
-          this.timesDueOn = timesDueOn;
-          logger.debug("Times due on: " + timesDueOn.toString());
+        //Put the elements in order of soonest to latest
+        timesDueOn.sort(null);
+        this.timesDueOn = timesDueOn;
+        logger.debug("Times due on: " + timesDueOn.toString());
 
+        if (!forcedOn) {
           try {
             if (timesDueOn.size() > 0) {
               TemperatureEvent timeDueOn = null;
