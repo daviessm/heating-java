@@ -42,15 +42,15 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
           return;
         }
       }
-
-      Map<String, BluetoothTemperatureSensor> sensors = heating.getSensors();
-      Map<String, Float> temps = new TreeMap<String, Float>();
-      for (String s : sensors.keySet()) {
-        temps.put(sensors.get(s).getName(), sensors.get(s).getCurrentTemperature());
-      }
-      json.put("temps", temps);
-      response.setStatus(HttpServletResponse.SC_OK);
-      response.getWriter().println(json.toString(2));
     }
+
+    Map<String, BluetoothTemperatureSensor> sensors = heating.getSensors();
+    Map<String, Float> temps = new TreeMap<String, Float>();
+    for (String s : sensors.keySet()) {
+      temps.put(sensors.get(s).getName(), sensors.get(s).getCurrentTemperature());
+    }
+    json.put("temps", temps);
+    response.setStatus(HttpServletResponse.SC_OK);
+    response.getWriter().println(json.toString(2));
   }
 }
