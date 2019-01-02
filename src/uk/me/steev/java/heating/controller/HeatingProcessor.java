@@ -301,5 +301,6 @@ public class HeatingProcessor implements Runnable, Processable {
       }
     }
     timeLastRun = LocalDateTime.now();
+    heating.notifyAll();
   }
 }
