@@ -46,6 +46,13 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
           return;
         }
       }
+      try {
+        Thread.sleep(5000);
+      } catch (InterruptedException ie) {
+        logger.catching(ie);
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        return;
+      }
     }
 
     Map<String, BluetoothTemperatureSensor> sensors = heating.getSensors();
