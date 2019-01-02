@@ -81,6 +81,8 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
         break;
       }
     }
+
+    json.put("override", heating.getOverrideDegrees());
     response.setStatus(HttpServletResponse.SC_OK);
     response.getWriter().println(json.toString(2));
   }
