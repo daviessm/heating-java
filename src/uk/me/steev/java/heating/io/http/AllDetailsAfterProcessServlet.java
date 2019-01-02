@@ -1,6 +1,8 @@
 package uk.me.steev.java.heating.io.http;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -13,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 import uk.me.steev.java.heating.controller.Heating;
+import uk.me.steev.java.heating.controller.TemperatureEvent;
 import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 
@@ -59,8 +62,18 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
       logger.catching(re);
     }
 
-    json.put("setpoint", heating.getDesiredTemperature());
-
+    json.put("currentsetpoint", heating.getDesiredTemperature());
+    List<TemperatureEvent> timesDueOn = heating.getProcessor().getTimesDueOn();
+    if (null != timesDueOn && timesDueOn.size() > 0) {
+      for (TemperatureEvent te : timesDueOn) {
+        if (te.getStartTime().isBefore(LocalDateTime.now()))
+          continue;
+  
+        json.put("nextsetpoint", te.getTemperature());
+        json.put("nexteventstart", te.getStartTime().toString());
+        break;
+      }
+    }
     response.setStatus(HttpServletResponse.SC_OK);
     response.getWriter().println(json.toString(2));
   }

@@ -24,6 +24,7 @@ public class HeatingProcessor implements Runnable, Processable {
   static final Logger logger = LogManager.getLogger(HeatingProcessor.class.getName());
   private LocalDateTime timeLastRun;
   private Heating heating;
+  private List<TemperatureEvent> timesDueOn;
 
   public HeatingProcessor(Heating heating) {
     this.heating = heating;
@@ -203,6 +204,7 @@ public class HeatingProcessor implements Runnable, Processable {
 
           //Put the elements in order of soonest to latest
           timesDueOn.sort(null);
+          this.timesDueOn = timesDueOn;
           logger.debug("Times due on: " + timesDueOn.toString());
 
           try {
@@ -300,5 +302,9 @@ public class HeatingProcessor implements Runnable, Processable {
       heating.notifyAll();
     }
     timeLastRun = LocalDateTime.now();
+  }
+
+  public List<TemperatureEvent> getTimesDueOn() {
+    return timesDueOn;
   }
 }
