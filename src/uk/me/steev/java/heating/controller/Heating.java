@@ -2,6 +2,7 @@ package uk.me.steev.java.heating.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +37,8 @@ public class Heating {
   protected HttpAdapter httpAdapter;
   protected Float desiredTemperature;
   protected Float proportion;
+  protected Float overrideDegrees = 0f;
+  protected LocalDateTime overrideEnd = LocalDateTime.now();
 
   public Heating(File configFile) throws HeatingException {
     try {
@@ -166,6 +169,22 @@ public class Heating {
 
   public void setProportion(Float proportion) {
     this.proportion = proportion;
+  }
+
+  public Float getOverrideDegrees() {
+    return overrideDegrees;
+  }
+
+  public void setOverrideDegrees(Float overrideDegrees) {
+    this.overrideDegrees = overrideDegrees;
+  }
+
+  public LocalDateTime getOverrideEnd() {
+    return overrideEnd;
+  }
+
+  public void setOverrideEnd(LocalDateTime overrideEnd) {
+    this.overrideEnd = overrideEnd;
   }
 
   public class SensorScanner implements Runnable {

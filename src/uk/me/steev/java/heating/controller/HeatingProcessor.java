@@ -38,6 +38,10 @@ public class HeatingProcessor implements Runnable, Processable {
 
   public void process() {
     synchronized(heating) {
+      LocalDateTime overrideEnd = heating.getOverrideEnd();
+      if (overrideEnd.isBefore(LocalDateTime.now())) {
+        heating.setOverrideDegrees(0f);
+      }
       try {
         int minimumTemperature;
         Duration minutesPerDegree;
@@ -168,9 +172,15 @@ public class HeatingProcessor implements Runnable, Processable {
         }
         logger.debug("Current temperature is " + currentTemperature);
 
+        float overrideDegrees = heating.getOverrideDegrees();
         try {
-          if (currentTemperature < minimumTemperature) {
-            logger.info("Current temperature " + currentTemperature + " is less than minimum temperature " + minimumTemperature + ". On.");
+          if (currentTemperature < minimumTemperature + overrideDegrees) {
+            logger.info("Current temperature " +
+              currentTemperature +
+              " is less than minimum temperature " +
+              minimumTemperature +
+              " (override by " +
+              overrideDegrees + ")");
             if (!(heating.getBoiler().isHeating()))
               heating.getBoiler().startHeating();
             return;
@@ -237,39 +247,47 @@ public class HeatingProcessor implements Runnable, Processable {
                   timeDueOn.getTimeDueOn().plus(minimumActivePeriodMinutes).isBefore(LocalDateTime.now()) &&
                   !heating.getBoiler().isHeating()) {
                 logger.info("Warming up, will overshoot, stay off");
-              } else if (timeDueOn.getTemperature() > (double) currentTemperature &&
-                  timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
-                logger.debug("Current temperature " + currentTemperature +
-                    " is below desired temperature " + timeDueOn.getTemperature() +
-                    " in an event starting at " + timeDueOn.getStartTime() +
-                    " warming up from " + timeDueOn.getTimeDueOn());
-
-                Duration newProportionalTime = Duration.ofSeconds((long) ((timeDueOn.getTemperature() - currentTemperature) * proportionalHeatingIntervalMinutes.toMinutes() * 60));
-                if (timeDueOn.getStartTime().isAfter(LocalDateTime.now()) && timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
-                  logger.debug("Warm-up period, stay on until desired temp period starts");
-                  newProportionalTime = proportionalHeatingIntervalMinutes;
-                } else if (newProportionalTime.compareTo(minimumActivePeriodMinutes) < 0) {
-                  newProportionalTime = minimumActivePeriodMinutes;
-                } else if (newProportionalTime.compareTo(proportionalHeatingIntervalMinutes) > 0) {
-                  newProportionalTime = proportionalHeatingIntervalMinutes;
+              } else if (timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
+                if (!timeDueOn.getStartTime().isEqual(timeDueOn.getTimeDueOn())) {
+                  logger.debug("Warming up, setting override to 0");
+                  overrideDegrees = 0f;
                 }
-                proportion = (float) newProportionalTime.getSeconds() / 60;
-
-                if (heating.getBoiler().isHeating()) {
-                  LocalDateTime timeHeatingOn = heating.getBoiler().getTimeHeatingOn();
-                  logger.debug("Heating is on - came on at " + timeHeatingOn + " and proportion is " + newProportionalTime);
-                  if (timeHeatingOn.plus(newProportionalTime).compareTo(LocalDateTime.now()) < 0) {
-                    heating.getBoiler().stopHeating();
-                    //Reschedule processor for when the proportional interval ends
-                    heating.getScheduledExecutor().schedule(this, newProportionalTime.toMillis(), TimeUnit.MILLISECONDS);
+                if (timeDueOn.getTemperature() > (double) currentTemperature - overrideDegrees) {
+                  logger.debug("Current temperature " + currentTemperature +
+                      " overridden by " + overrideDegrees +
+                      " is below desired temperature " + timeDueOn.getTemperature() +
+                      " in an event starting at " + timeDueOn.getStartTime() +
+                      " warming up from  " + timeDueOn.getTimeDueOn());
+                  Duration newProportionalTime = Duration.ofSeconds((long) (
+                      (timeDueOn.getTemperature() - currentTemperature - overrideDegrees)
+                      * proportionalHeatingIntervalMinutes.toMinutes()
+                      * 60));
+                  if (timeDueOn.getStartTime().isAfter(LocalDateTime.now()) && timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
+                    logger.debug("Warm-up period, stay on until desired temp period starts");
+                    newProportionalTime = proportionalHeatingIntervalMinutes;
+                  } else if (newProportionalTime.compareTo(minimumActivePeriodMinutes) < 0) {
+                    newProportionalTime = minimumActivePeriodMinutes;
+                  } else if (newProportionalTime.compareTo(proportionalHeatingIntervalMinutes) > 0) {
+                    newProportionalTime = proportionalHeatingIntervalMinutes;
                   }
-                } else {
-                  LocalDateTime timeHeatingOff = heating.getBoiler().getTimeHeatingOff();
-                  logger.debug("Heating is off - went off at " + timeHeatingOff + " and proportion is " + newProportionalTime);
-                  if (timeHeatingOff.plus(proportionalHeatingIntervalMinutes.minus(newProportionalTime)).compareTo(LocalDateTime.now()) < 0) {
-                    heating.getBoiler().startHeating();
-                    //Reschedule processor for when the proportional interval ends
-                    heating.getScheduledExecutor().schedule(this, newProportionalTime.toMillis(), TimeUnit.MILLISECONDS);
+                  proportion = (float) newProportionalTime.getSeconds() / 60;
+  
+                  if (heating.getBoiler().isHeating()) {
+                    LocalDateTime timeHeatingOn = heating.getBoiler().getTimeHeatingOn();
+                    logger.debug("Heating is on - came on at " + timeHeatingOn + " and proportion is " + newProportionalTime);
+                    if (timeHeatingOn.plus(newProportionalTime).compareTo(LocalDateTime.now()) < 0) {
+                      heating.getBoiler().stopHeating();
+                      //Reschedule processor for when the proportional interval ends
+                      heating.getScheduledExecutor().schedule(this, newProportionalTime.toMillis(), TimeUnit.MILLISECONDS);
+                    }
+                  } else {
+                    LocalDateTime timeHeatingOff = heating.getBoiler().getTimeHeatingOff();
+                    logger.debug("Heating is off - went off at " + timeHeatingOff + " and proportion is " + newProportionalTime);
+                    if (timeHeatingOff.plus(proportionalHeatingIntervalMinutes.minus(newProportionalTime)).compareTo(LocalDateTime.now()) < 0) {
+                      heating.getBoiler().startHeating();
+                      //Reschedule processor for when the proportional interval ends
+                      heating.getScheduledExecutor().schedule(this, newProportionalTime.toMillis(), TimeUnit.MILLISECONDS);
+                    }
                   }
                 }
               } else {
