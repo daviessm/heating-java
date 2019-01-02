@@ -35,6 +35,7 @@ public class HttpAdapter {
       handler.addServletWithMapping(new ServletHolder(new RefreshServlet(heating)), "/refresh/*");
       handler.addServletWithMapping(new ServletHolder(new AllDetailsAfterProcessServlet(heating)), "/all_details/*");
       handler.addServletWithMapping(new ServletHolder(new SetOverrideServlet(heating)), "/override/*");
+      handler.addServletWithMapping(new ServletHolder(new SetGoneOutUntilServlet(heating)), "/gone_out_until/*");
 
       server.setRequestLog(new AccessLogHandler());
       server.start();
