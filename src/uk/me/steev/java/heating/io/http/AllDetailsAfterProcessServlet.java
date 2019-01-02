@@ -58,6 +58,9 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
     } catch (RelayException re) {
       logger.catching(re);
     }
+
+    json.put("setpoint", heating.getDesiredTemperature());
+
     response.setStatus(HttpServletResponse.SC_OK);
     response.getWriter().println(json.toString(2));
   }
