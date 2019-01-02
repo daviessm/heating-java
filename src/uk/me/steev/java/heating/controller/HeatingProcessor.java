@@ -284,7 +284,7 @@ public class HeatingProcessor implements Runnable, Processable {
                     newProportionalTime = proportionalHeatingIntervalMinutes;
                   }
                   proportion = (float) newProportionalTime.getSeconds() / 60;
-  
+
                   if (heating.getBoiler().isHeating()) {
                     LocalDateTime timeHeatingOn = heating.getBoiler().getTimeHeatingOn();
                     logger.debug("Heating is on - came on at " + timeHeatingOn + " and proportion is " + newProportionalTime);
@@ -300,6 +300,16 @@ public class HeatingProcessor implements Runnable, Processable {
                       heating.getBoiler().startHeating();
                       //Reschedule processor for when the proportional interval ends
                       heating.getScheduledExecutor().schedule(this, newProportionalTime.toMillis(), TimeUnit.MILLISECONDS);
+                    }
+                  }
+                } else {
+                  logger.debug("In an event but warmer than the desired temperature");
+                  if (heating.getBoiler().isHeating()) {
+                    if (heating.getBoiler().getTimeHeatingOn().plus(minimumActivePeriodMinutes).isAfter(LocalDateTime.now())) {
+                        logger.debug("Boiler has not been on for minimum time, wait");
+                    } else {
+                        logger.debug("Boiler is on, turn off");
+                        heating.getBoiler().stopHeating();
                     }
                   }
                 }
