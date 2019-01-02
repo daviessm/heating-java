@@ -327,7 +327,7 @@ public abstract class BluetoothTemperatureSensor {
         try {
           try {
             updateTemperature();
-            logger.info("Got temperature " + currentTemperature + " for device " + address);
+            logger.info("Got temperature " + currentTemperature + " for device " + name);
           } catch (BluetoothException be) {
             logger.catching(Level.WARN, be);
           }
