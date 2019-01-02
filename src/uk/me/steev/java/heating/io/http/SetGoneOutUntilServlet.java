@@ -26,10 +26,13 @@ public class SetGoneOutUntilServlet extends HeatingServlet {
 
     response.setContentType("text/plain");
 
+    LocalDateTime goneOutUntilTime = null;
     String pathInfo = null;
     if (null != request.getPathInfo()) {
       pathInfo = request.getPathInfo().replaceFirst("/", "");
-      LocalDateTime goneOutUntilTime = LocalDateTime.parse(pathInfo, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+      if (!"null".equals(pathInfo)) {
+        goneOutUntilTime = LocalDateTime.parse(pathInfo, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+      }
 
       heating.setGoneOutUntilTime(goneOutUntilTime);
       heating.getProcessor().process();
