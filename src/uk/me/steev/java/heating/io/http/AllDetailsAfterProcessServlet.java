@@ -29,8 +29,10 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
     response.setContentType("application/json");
     JSONObject json = new JSONObject();
 
-    String pathInfo = request.getPathInfo().replaceFirst("/", "");
-    if (!"no_wait".equals(pathInfo)) {
+    String pathInfo = null;
+    if (null != request.getPathInfo())
+      pathInfo = request.getPathInfo().replaceFirst("/", "");
+    if (!(null != pathInfo && "no_wait".equals(pathInfo))) {
       synchronized(heating) {
         try {
           heating.wait();
@@ -40,15 +42,15 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
           return;
         }
       }
-
-      Map<String, BluetoothTemperatureSensor> sensors = heating.getSensors();
-      Map<String, Float> temps = new TreeMap<String, Float>();
-      for (String s : sensors.keySet()) {
-        temps.put(sensors.get(s).getName(), sensors.get(s).getCurrentTemperature());
-      }
-      json.put("temps", temps);
-      response.setStatus(HttpServletResponse.SC_OK);
-      response.getWriter().println(json.toString(2));
     }
+
+    Map<String, BluetoothTemperatureSensor> sensors = heating.getSensors();
+    Map<String, Float> temps = new TreeMap<String, Float>();
+    for (String s : sensors.keySet()) {
+      temps.put(sensors.get(s).getName(), sensors.get(s).getCurrentTemperature());
+    }
+    json.put("temps", temps);
+    response.setStatus(HttpServletResponse.SC_OK);
+    response.getWriter().println(json.toString(2));
   }
 }
