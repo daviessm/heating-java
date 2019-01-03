@@ -221,6 +221,8 @@ public class HeatingProcessor implements Runnable, Processable {
                 LocalDateTime newEventStartTime = eventStartTime.minus(effectDelayMinutes)
                     .minusSeconds((long) (minutesPerDegree.toMinutes() * (eventTemperature - currentTemperature) * 60));
                 timesDueOn.add(new TemperatureEvent(newEventStartTime, eventStartTime, eventEndTime, eventTemperature));
+              } else {
+                timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventEndTime, eventTemperature));
               }
             }
           } catch (NumberFormatException nfe) {

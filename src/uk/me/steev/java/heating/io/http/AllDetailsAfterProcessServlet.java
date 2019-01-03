@@ -71,27 +71,30 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
 
     try {
       if (null != timesDueOn && timesDueOn.size() > 0) {
-        for (int i = 0; i < timesDueOn.size(); i++) {
-          TemperatureEvent te = timesDueOn.get(i);
-          if (te.getEndTime().isBefore(LocalDateTime.now()))
-            continue;
-  
-          if (i + 1 < timesDueOn.size()) {
-            next = timesDueOn.get(i + 1);
-            if (te.getEndTime().isEqual(next.getStartTime()) ||
-                te.getEndTime().isAfter(next.getStartTime())) {
-              json.put("nextsetpoint", next.getTemperature());
-              json.put("nexteventstart", next.getStartTime().toString());
-            } else {
-              json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
-              json.put("nexteventstart", next.getEndTime());
-            }
+        TemperatureEvent te = timesDueOn.get(0);
+        if (te.getStartTime().isAfter(LocalDateTime.now())) {
+          //Not in an event currently
+          json.put("nextsetpoint", te.getTemperature());
+          json.put("nexteventstart", te.getStartTime().toString());
+        } else if (timesDueOn.size() >= 2) {
+          next = timesDueOn.get(1);
+          if (te.getEndTime().isEqual(next.getStartTime()) ||
+              te.getEndTime().isAfter(next.getStartTime())) {
+            //In an event, next starts immediately after
+            json.put("nextsetpoint", next.getTemperature());
+            json.put("nexteventstart", next.getStartTime().toString());
           } else {
+            //In an event, no event immediately after
             json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
-            json.put("nexteventstart", te.getEndTime());
+            json.put("nexteventstart", next.getEndTime());
           }
+        } else {
+          //Only one event and we're in it
+          json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
+          json.put("nexteventstart", te.getEndTime());
         }
       } else {
+        //No events
         json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
       }
     } catch (HeatingException re) {
