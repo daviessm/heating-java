@@ -24,11 +24,11 @@ import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 public class AllDetailsAfterProcessServlet extends HeatingServlet {
   private static final long serialVersionUID = -2479268631077208608L;
   static final Logger logger = LogManager.getLogger(CurrentTempServlet.class.getName());
-  
+
   public AllDetailsAfterProcessServlet(Heating heating) {
     super(heating);
   }
-  
+
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
 
@@ -39,17 +39,11 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
     if (null != request.getPathInfo())
       pathInfo = request.getPathInfo().replaceFirst("/", "");
     if (!(null != pathInfo && "no_wait".equals(pathInfo))) {
-      synchronized(heating) {
-        try {
-          heating.wait();
-        } catch (InterruptedException ie) {
-          logger.catching(ie);
-          response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-          return;
-        }
-      }
       try {
-        Thread.sleep(5000);
+        synchronized(heating) {
+          heating.wait();
+        }
+        Thread.sleep(2000);
       } catch (InterruptedException ie) {
         logger.catching(ie);
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
