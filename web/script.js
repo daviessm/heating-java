@@ -41,7 +41,7 @@ function processNewValues( data ) {
   if ( override > 0 ) {
     currentsetpoint = currentsetpoint + "+" + override + "&deg;";
   } else if ( override < 0 ) {
-    currentsetpoint = currentsetpoint + "-" + override + "&deg;";
+    currentsetpoint = currentsetpoint + override + "&deg;";
   } else {
     currentsetpoint = currentsetpoint + "&deg;";
   }
