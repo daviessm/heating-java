@@ -32,14 +32,17 @@ public class SetOverrideServlet extends HeatingServlet {
       pathInfo = request.getPathInfo().replaceFirst("/", "");
       Float overrideDegrees = Float.parseFloat(pathInfo);
       List<TemperatureEvent> timesDueOn = heating.getProcessor().getTimesDueOn();
-      if (null != timesDueOn && timesDueOn.size() > 0) {
+      if (null != timesDueOn && timesDueOn.size() > 0 &&
+          Float.compare(0f, overrideDegrees) == 0) {
         for (TemperatureEvent te : timesDueOn) {
-          if (te.getStartTime().isBefore(LocalDateTime.now()))
-            continue;
-    
-          heating.setOverrideEnd(te.getStartTime());
-          break;
+          if (te.getStartTime().isBefore(LocalDateTime.now()) &&
+              te.getEndTime().isAfter(LocalDateTime.now())) {
+            heating.setOverrideEnd(te.getEndTime());
+            break;
+          }
         }
+      } else {
+          heating.setOverrideEnd(LocalDateTime.now());
       }
 
       heating.setOverrideDegrees(overrideDegrees);
