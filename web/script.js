@@ -13,8 +13,10 @@ function getNewValues( immediate, initial ) {
   })
     .done( function( data ) {
       processNewValues( data );
+    })
+    .always( function( data, textStatus, jqXHR ) {
       if ( initial )
-        setTimeout( function() { getNewValues( false, initial )}, 5000 );
+        setTimeout( function() { getNewValues( false, initial )}, 55000 );
     });
 }
 
