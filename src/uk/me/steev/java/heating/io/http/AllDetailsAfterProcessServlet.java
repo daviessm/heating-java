@@ -74,28 +74,31 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
     json.put("currentsetpoint", heating.getDesiredTemperature());
     List<TemperatureEvent> timesDueOn = heating.getProcessor().getTimesDueOn();
     TemperatureEvent next = null;
-    if (null != timesDueOn && timesDueOn.size() > 0) {
-      for (TemperatureEvent te : timesDueOn) {
-        next = te;
-        if (te.getStartTime().isBefore(LocalDateTime.now()))
-          continue;
-  
-        break;
-      }
-    }
 
     try {
-      if (null != next) {
-        if (next.getStartTime().isAfter(LocalDateTime.now())) {
-          json.put("nextsetpoint", next.getTemperature());
-          json.put("nexteventstart", next.getStartTime().toString());
-        } else {
-          json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
-          json.put("nexteventstart", next.getEndTime());
+      if (null != timesDueOn && timesDueOn.size() > 0) {
+        for (int i = 0; i < timesDueOn.size(); i++) {
+          TemperatureEvent te = timesDueOn.get(i);
+          if (te.getEndTime().isBefore(LocalDateTime.now()))
+            continue;
+  
+          if (i + 1 < timesDueOn.size()) {
+            next = timesDueOn.get(i + 1);
+            if (te.getEndTime().isEqual(next.getStartTime()) ||
+                te.getEndTime().isAfter(next.getStartTime())) {
+              json.put("nextsetpoint", next.getTemperature());
+              json.put("nexteventstart", next.getStartTime().toString());
+            } else {
+              json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
+              json.put("nexteventstart", next.getEndTime());
+            }
+          } else {
+            json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
+            json.put("nexteventstart", te.getEndTime());
+          }
         }
       } else {
         json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
-        json.put("nexteventstart", "Unknown");
       }
     } catch (HeatingException re) {
       logger.catching(re);
