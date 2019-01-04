@@ -86,7 +86,7 @@ public class AllDetailsAfterProcessServlet extends HeatingServlet {
           } else {
             //In an event, no event immediately after
             json.put("nextsetpoint", HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature"));
-            json.put("nexteventstart", next.getEndTime());
+            json.put("nexteventstart", te.getEndTime());
           }
         } else {
           //Only one event and we're in it
