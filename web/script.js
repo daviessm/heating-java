@@ -1,4 +1,4 @@
-var overrideTemp = 0.0;
+var overrideTemp = Number(0.0);
 
 function getNewValues( immediate, initial ) {
   var url = "/heating/all_details";
@@ -37,19 +37,21 @@ function processNewValues( data ) {
     $( "#preheatstatus" ).removeClass( "bgorange" ).addClass( "bgwhite" ).text( "Preheat: Off" );
   }
 
-  var currentsetpoint = data.currentsetpoint.toFixed(1);
-  var override = data.override.toFixed(1);
+  if (!isNaN(parseFloat(data.currentsetpoint)) && !isNaN(parseFloat(data.override))) {
+    var currentsetpoint = Number(data.currentsetpoint.toFixed(1));
+    overrideTemp = Number(data.override.toFixed(1));
 
-  if ( override > 0 ) {
-    currentsetpoint = currentsetpoint + "+" + override + "&deg;";
-  } else if ( override < 0 ) {
-    currentsetpoint = currentsetpoint + override + "&deg;";
-  } else {
-    currentsetpoint = currentsetpoint + "&deg;";
+    if ( overrideTemp > 0 ) {
+      currentsetpoint = currentsetpoint + "+" + overrideTemp + "&deg;";
+    } else if ( overrideTemp < 0 ) {
+      currentsetpoint = currentsetpoint + overrideTemp + "&deg;";
+    } else {
+      currentsetpoint = currentsetpoint + "&deg;";
+    }
+    $( "#currentsetpoint" ).html( currentsetpoint );
+
+    $( "#override" ).html( "Override by " + overrideTemp + "&deg;" );
   }
-  $( "#currentsetpoint" ).html( currentsetpoint );
-
-  $( "#override" ).html( "Override by " + override + "&deg;" );
 
   if ( data.nextsetpoint ) {
     $( "#nextsetpoint" ).html( data.nextsetpoint.toFixed(1) + "&deg;" );
