@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import uk.me.steev.java.heating.controller.HeatingConfiguration;
+import uk.me.steev.java.heating.controller.HeatingException;
+
 public class Boiler {
   static final Logger logger = LogManager.getLogger(Boiler.class.getName());
   protected Relay heatingRelay;
@@ -12,9 +15,10 @@ public class Boiler {
   protected LocalDateTime timeHeatingOn;
   protected LocalDateTime timeHeatingOff;
 
-  public Boiler(Relay heatingRelay, Relay preheatRelay) {
-    this.heatingRelay = heatingRelay;
-    this.preheatRelay = preheatRelay;
+  public Boiler() throws RelayException, HeatingException {
+    this.heatingRelay = Relay.findRelay(HeatingConfiguration.getRelay("heating"));
+    this.preheatRelay = Relay.findRelay(HeatingConfiguration.getRelay("preheat"));
+
     this.timeHeatingOff = LocalDateTime.now().minusDays(1);
   }
 

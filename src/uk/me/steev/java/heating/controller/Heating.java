@@ -16,9 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import uk.me.steev.java.heating.io.api.CalendarAdapter;
 import uk.me.steev.java.heating.io.api.WeatherAdapter;
 import uk.me.steev.java.heating.io.boiler.Boiler;
-import uk.me.steev.java.heating.io.boiler.Relay;
 import uk.me.steev.java.heating.io.boiler.RelayException;
-import uk.me.steev.java.heating.io.boiler.RelayTypes;
 import uk.me.steev.java.heating.io.http.HttpAdapter;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor.TemperatureUpdater;
@@ -46,10 +44,8 @@ public class Heating {
       //Set up configuration
       HeatingConfiguration.getConfiguration(configFile);
 
-      //Set up relays
-      Relay heatingRelay = Relay.findRelay(RelayTypes.USB_1, HeatingConfiguration.getRelay("heating"));
-      Relay preheatRelay = Relay.findRelay(RelayTypes.USB_1, HeatingConfiguration.getRelay("preheat"));
-      this.boiler = new Boiler(heatingRelay, preheatRelay);
+      //Set up boiler (which sets up the relays)
+      this.boiler = new Boiler();
 
       //Set up event processor
       this.processor = new HeatingProcessor(this);
