@@ -11,10 +11,10 @@ function getNewValues( immediate, initial ) {
     dataType: "json",
     cache: false
   })
-    .done( function( data ) {
-      processNewValues( data );
-    })
-    .always( function( data, textStatus, jqXHR ) {
+  .done( function( data ) {
+    processNewValues( data );
+  })
+  .always( function( data, textStatus, jqXHR ) {
     $( "#goneoutuntil" ).clockTimePicker({
       precision: 10,
       afternoonHoursInOuterCircle: true,
@@ -33,11 +33,11 @@ function getNewValues( immediate, initial ) {
           url: "/heating/gone_out_until/" + newTime.format()
         })
         .done( function () { getNewValues( true, false ) } )
-    })
-  });
-      if ( initial )
-        setTimeout( function() { getNewValues( false, initial )}, 55000 );
+      })
     });
+    if ( initial )
+      setTimeout( function() { getNewValues( false, initial )}, 55000 );
+  });
 }
 
 function processNewValues( data ) {
