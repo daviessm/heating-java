@@ -15,7 +15,26 @@ function getNewValues( immediate, initial ) {
       processNewValues( data );
     })
     .always( function( data, textStatus, jqXHR ) {
-      $( "#goneoutuntil" ).clockTimePicker.minimum = moment().add( 1, 'hours' ).format( "HH:mm" );
+    $( "#goneoutuntil" ).clockTimePicker({
+      precision: 10,
+      afternoonHoursInOuterCircle: true,
+      minimum: moment().add( 1, 'hours' ).format( "HH:mm" ),
+      required: true,
+      onChange:( function( newValue, oldValue ) {
+        var newTime = moment();
+        var hours = newValue.substring( 0, 2 );
+        var minutes = newValue.substring( 3, 5 );
+        newTime.hour(hours);
+        newTime.minute(minutes);
+        newTime.second(0);
+        newTime.millisecond(0);
+        $.ajax({
+          type: "GET",
+          url: "/heating/gone_out_until/" + newTime.format()
+        })
+        .done( function () { getNewValues( true, false ) } )
+    })
+  });
       if ( initial )
         setTimeout( function() { getNewValues( false, initial )}, 55000 );
     });
@@ -93,27 +112,6 @@ $( document ).ready( function () {
       url: "/heating/override/" + overrideTemp
     })
       .done( function () { getNewValues( true, false ) } );
-  });
-
-  $( "#goneoutuntil" ).clockTimePicker({
-    precision: 10,
-    afternoonHoursInOuterCircle: true,
-    minimum: moment().add( 1, 'hours' ).format( "HH:mm" ),
-    required: true,
-    onChange:( function( newValue, oldValue ) {
-      var newTime = moment();
-      var hours = newValue.substring( 0, 2 );
-      var minutes = newValue.substring( 3, 5 );
-      newTime.hour(hours);
-      newTime.minute(minutes);
-      newTime.second(0);
-      newTime.millisecond(0);
-      $.ajax({
-        type: "GET",
-        url: "/heating/gone_out_until/" + newTime.format()
-      })
-        .done( function () { getNewValues( true, false ) } )
-    })
   });
 
   $( "#clear" ).click( function() {
