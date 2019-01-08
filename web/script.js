@@ -15,6 +15,7 @@ function getNewValues( immediate, initial ) {
       processNewValues( data );
     })
     .always( function( data, textStatus, jqXHR ) {
+      $( "#goneoutuntil" ).clockTimePicker.minimum = moment().add( 1, 'hours' ).format( "HH:mm" );
       if ( initial )
         setTimeout( function() { getNewValues( false, initial )}, 55000 );
     });
