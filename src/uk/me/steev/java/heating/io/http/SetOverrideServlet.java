@@ -39,6 +39,9 @@ public class SetOverrideServlet extends HeatingServlet {
               te.getEndTime().isAfter(LocalDateTime.now())) {
             heating.setOverrideEnd(te.getEndTime());
             break;
+          } else if (te.getStartTime().isAfter(LocalDateTime.now())) {
+            heating.setOverrideEnd(te.getStartTime());
+            break;
           }
         }
       } else {
