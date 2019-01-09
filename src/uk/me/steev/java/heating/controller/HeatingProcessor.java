@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.api.services.calendar.model.Event;
 
+import info.faljse.SDNotify.SDNotify;
 import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 import uk.me.steev.java.heating.utils.Processable;
@@ -351,6 +352,7 @@ public class HeatingProcessor implements Runnable, Processable {
       heating.notifyAll();
     }
     timeLastRun = LocalDateTime.now();
+    SDNotify.sendWatchdog();
   }
 
   public List<TemperatureEvent> getTimesDueOn() {

@@ -10,6 +10,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.Logger;
+
+import info.faljse.SDNotify.SDNotify;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 
@@ -65,6 +68,9 @@ public class Heating {
       this.scanner = new SensorScanner(this.processor);
 
       this.httpAdapter = HttpAdapter.getHttpAdapter(this);
+
+      //Notify systemd (if running) that startup has finished
+      SDNotify.sendNotify();
     } catch (RelayException | IOException e) {
       throw new HeatingException("Error creating Heating object", e);
     }
