@@ -42,22 +42,43 @@ function getNewValues( immediate, initial ) {
 
 function processNewValues( data ) {
   for ( var key in data.temps ) {
-    $("#"+key+"temp").html( data.temps[key].toFixed(1) + "&deg;" );
+    let timeout = $( "#"+key+"temp" ).data( "timeout" );
+    if ( timeout != 0 )
+      clearTimeout( timeout );
+    $( "#"+key+"temp" ).html( data.temps[key].toFixed(1) + "&deg;" );
+    $( "#"+key+"temp" ).data( "timeout", setTimeout(function() { $( "#"+key+"temp" ).text( "Unknown" ); }, 121000) );
   }
 
-  if ( data.heating ) {
-    $( "#heatingstatus" ).removeClass( "bgwhite" ).addClass( "bgred" ).text( "Heating: On" );
-  } else {
-    $( "#heatingstatus" ).removeClass( "bgred" ).addClass( "bgwhite" ).text( "Heating: Off" );
+  if ( data.hasOwnProperty( "heating" ) ) {
+    let timeout = $( "#heatingstatus" ).data( "timeout" );
+    if ( timeout != 0 )
+      clearTimeout( timeout );
+    $( "#heatingstatus" ).data( "timeout", setTimeout(function() { $( "#heatingstatus" ).text( "Unknown" ); }, 121000 ) );
+
+    if ( data.heating ) {
+      $( "#heatingstatus" ).removeClass( "bgwhite" ).addClass( "bgred" ).text( "Heating: On" );
+    } else {
+      $( "#heatingstatus" ).removeClass( "bgred" ).addClass( "bgwhite" ).text( "Heating: Off" );
+    }
   }
 
-  if ( data.preheat ) {
-    $( "#preheatstatus" ).removeClass( "bgwhite" ).addClass( "bgorange" ).text( "Preheat: On" );
-  } else {
-    $( "#preheatstatus" ).removeClass( "bgorange" ).addClass( "bgwhite" ).text( "Preheat: Off" );
+  if ( data.hasOwnProperty( "heating" ) ) {
+    let timeout = $( "#preheatstatus" ).data( "timeout" );
+    if ( timeout != 0 )
+      clearTimeout( timeout );
+    $( "#preheatstatus" ).data( "timeout", setTimeout(function() { $( "#preheatstatus" ).text( "Unknown" ); }, 121000 ) );
+    if ( data.preheat ) {
+      $( "#preheatstatus" ).removeClass( "bgwhite" ).addClass( "bgorange" ).text( "Preheat: On" );
+    } else {
+      $( "#preheatstatus" ).removeClass( "bgorange" ).addClass( "bgwhite" ).text( "Preheat: Off" );
+    }
   }
 
   if (!isNaN(parseFloat(data.currentsetpoint)) && !isNaN(parseFloat(data.override))) {
+    let timeout = $( "#currentsetpoint" ).data( "timeout" );
+    if ( timeout != 0 )
+      clearTimeout( timeout );
+    $( "#currentsetpoint" ).data( "timeout", setTimeout(function() { $( "#currentsetpoint" ).text( "Unknown" ); }, 121000 ) );
     var currentsetpoint = Number(data.currentsetpoint.toFixed(1));
     overrideTemp = Number(data.override.toFixed(1));
 
@@ -74,12 +95,20 @@ function processNewValues( data ) {
   }
 
   if ( data.nextsetpoint ) {
+    let timeout = $( "#nextsetpoint" ).data( "timeout" );
+    if ( timeout != 0 )
+      clearTimeout( timeout );
+    $( "#nextsetpoint" ).data( "timeout", setTimeout(function() { $( "#nextsetpoint" ).text( "Unknown" ); }, 121000 ) );
     $( "#nextsetpoint" ).html( data.nextsetpoint.toFixed(1) + "&deg;" );
   } else {
     $( "#nextsetpoint" ).text( "Unknown" ) ;
   }
 
   if ( data.nexteventstart ) {
+    let timeout = $( "#nexteventstart" ).data( "timeout" );
+    if ( timeout != 0 )
+      clearTimeout( timeout );
+    $( "#nexteventstart" ).data( "timeout", setTimeout(function() { $( "#nexteventstart" ).text( "Unknown" ); }, 121000 ) );
     var nexteventstart = new moment( data.nexteventstart );
     $( "#nexteventstart" ).text( nexteventstart.format( "DD/MM/YYYY HH:mm" ));
   } else {
