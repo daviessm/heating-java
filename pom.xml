@@ -87,7 +87,7 @@
     <dependency>
       <groupId>com.github.hypfvieh</groupId>
       <artifactId>bluez-dbus</artifactId>
-      <version>0.1.0</version>
+      <version>0.1.1</version>
     </dependency>
     <dependency>
     	<groupId>info.faljse</groupId>
