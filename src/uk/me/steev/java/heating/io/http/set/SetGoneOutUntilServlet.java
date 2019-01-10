@@ -1,4 +1,4 @@
-package uk.me.steev.java.heating.io.http;
+package uk.me.steev.java.heating.io.http.set;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -12,8 +12,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import uk.me.steev.java.heating.controller.Heating;
+import uk.me.steev.java.heating.io.http.get.CurrentTempServlet;
 
-public class SetGoneOutUntilServlet extends HeatingServlet {
+public class SetGoneOutUntilServlet extends SetServlet {
   private static final long serialVersionUID = -2479268631077208608L;
   static final Logger logger = LogManager.getLogger(CurrentTempServlet.class.getName());
   
@@ -21,7 +22,7 @@ public class SetGoneOutUntilServlet extends HeatingServlet {
     super(heating);
   }
   
-  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+  protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
 
     response.setContentType("text/plain");

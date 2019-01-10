@@ -7,12 +7,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import uk.me.steev.java.heating.controller.Heating;
 import uk.me.steev.java.heating.controller.HeatingException;
 
 public class RefreshServlet extends HeatingServlet {
   private static final long serialVersionUID = -4295879852374390014L;
+  static final Logger logger = LogManager.getLogger(RefreshServlet.class.getName());
 
   public RefreshServlet(Heating heating) {
     super(heating);

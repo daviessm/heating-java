@@ -1,4 +1,4 @@
-package uk.me.steev.java.heating.io.http;
+package uk.me.steev.java.heating.io.http.get;
 
 import java.io.IOException;
 
@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import uk.me.steev.java.heating.controller.Heating;
 import uk.me.steev.java.heating.io.api.CallFailedException;
 
-public class ExternalWeatherServlet extends HeatingServlet {
+public class ExternalWeatherServlet extends GetServlet {
   static final Logger logger = LogManager.getLogger(ExternalWeatherServlet.class.getName());
   private static final long serialVersionUID = -7558722807676613014L;
 

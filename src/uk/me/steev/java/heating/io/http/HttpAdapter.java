@@ -11,6 +11,14 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.log.Slf4jLog;
 
 import uk.me.steev.java.heating.controller.Heating;
+import uk.me.steev.java.heating.io.http.get.AllDetailsAfterProcessServlet;
+import uk.me.steev.java.heating.io.http.get.CurrentTempServlet;
+import uk.me.steev.java.heating.io.http.get.DesiredTempServlet;
+import uk.me.steev.java.heating.io.http.get.ExternalWeatherServlet;
+import uk.me.steev.java.heating.io.http.get.ProportionServlet;
+import uk.me.steev.java.heating.io.http.get.StatusServlet;
+import uk.me.steev.java.heating.io.http.set.SetGoneOutUntilServlet;
+import uk.me.steev.java.heating.io.http.set.SetOverrideServlet;
 
 public class HttpAdapter {
   static final Logger logger = LogManager.getLogger(HttpAdapter.class.getName());
@@ -27,15 +35,15 @@ public class HttpAdapter {
       ServletHandler handler = new ServletHandler();
       server.setHandler(handler);
 
-      handler.addServletWithMapping(new ServletHolder(new CurrentTempServlet(heating)), "/current_temp/*");
-      handler.addServletWithMapping(new ServletHolder(new DesiredTempServlet(heating)), "/desired_temp");
-      handler.addServletWithMapping(new ServletHolder(new ProportionServlet(heating)), "/proportion");
-      handler.addServletWithMapping(new ServletHolder(new ExternalWeatherServlet(heating)), "/weather/*");
-      handler.addServletWithMapping(new ServletHolder(new StatusServlet(heating)), "/status/*");
-      handler.addServletWithMapping(new ServletHolder(new RefreshServlet(heating)), "/refresh/*");
-      handler.addServletWithMapping(new ServletHolder(new AllDetailsAfterProcessServlet(heating)), "/all_details/*");
-      handler.addServletWithMapping(new ServletHolder(new SetOverrideServlet(heating)), "/override/*");
-      handler.addServletWithMapping(new ServletHolder(new SetGoneOutUntilServlet(heating)), "/gone_out_until/*");
+      handler.addServletWithMapping(new ServletHolder(new CurrentTempServlet(heating)), "/get/current_temp/*");
+      handler.addServletWithMapping(new ServletHolder(new DesiredTempServlet(heating)), "/get/desired_temp");
+      handler.addServletWithMapping(new ServletHolder(new ProportionServlet(heating)), "/get/proportion");
+      handler.addServletWithMapping(new ServletHolder(new ExternalWeatherServlet(heating)), "/get/weather/*");
+      handler.addServletWithMapping(new ServletHolder(new StatusServlet(heating)), "/get/status/*");
+      handler.addServletWithMapping(new ServletHolder(new RefreshServlet(heating)), "/get/refresh/*");
+      handler.addServletWithMapping(new ServletHolder(new AllDetailsAfterProcessServlet(heating)), "/get/all_details/*");
+      handler.addServletWithMapping(new ServletHolder(new SetOverrideServlet(heating)), "/set/override/*");
+      handler.addServletWithMapping(new ServletHolder(new SetGoneOutUntilServlet(heating)), "/set/gone_out_until/*");
 
       server.setRequestLog(new AccessLogHandler());
       server.start();
@@ -53,15 +61,19 @@ public class HttpAdapter {
   }
 
   public class AccessLogHandler extends AbstractNCSARequestLog {
-    private Logger logger = LogManager.getLogger(AccessLogHandler.class.getName());
+    private Logger logger = LogManager.getLogger(this.getClass().getName());
+    {
+      this.setPreferProxiedForAddress(true);
+    }
+
     @Override
     protected boolean isEnabled() {
-        return true;
+      return true;
     }
 
     @Override
     public void write(String requestEntry) throws IOException {
-        logger.info(requestEntry);
+      logger.info(requestEntry);
     }
   }
 }

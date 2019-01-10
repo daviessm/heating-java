@@ -1,4 +1,4 @@
-package uk.me.steev.java.heating.io.http;
+package uk.me.steev.java.heating.io.http.get;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -21,7 +21,7 @@ import uk.me.steev.java.heating.controller.TemperatureEvent;
 import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 
-public class AllDetailsAfterProcessServlet extends HeatingServlet {
+public class AllDetailsAfterProcessServlet extends GetServlet {
   private static final long serialVersionUID = -2479268631077208608L;
   static final Logger logger = LogManager.getLogger(CurrentTempServlet.class.getName());
 

@@ -1,4 +1,4 @@
-package uk.me.steev.java.heating.io.http;
+package uk.me.steev.java.heating.io.http.get;
 
 import java.io.IOException;
 
@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import uk.me.steev.java.heating.controller.Heating;
 
-public class DesiredTempServlet extends HeatingServlet {
+public class DesiredTempServlet extends GetServlet {
   private static final long serialVersionUID = -4295879852374390014L;
 
   public DesiredTempServlet(Heating heating) {

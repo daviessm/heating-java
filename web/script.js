@@ -1,12 +1,12 @@
 var overrideTemp = Number(0.0);
 
 function getNewValues( immediate, initial ) {
-  var url = "/heating/all_details";
+  var url = "/heating/get/all_details";
   if( immediate ) {
     url = url + "/no_wait";
   }
   var qry = $.ajax({
-    type: "GET",
+    method: "GET",
     url: url,
     dataType: "json",
     cache: false
@@ -29,8 +29,8 @@ function getNewValues( immediate, initial ) {
         newTime.second(0);
         newTime.millisecond(0);
         $.ajax({
-          type: "GET",
-          url: "/heating/gone_out_until/" + newTime.format()
+          method: "POST",
+          url: "/heating/set/gone_out_until/" + newTime.format()
         })
         .done( function () { getNewValues( true, false ) } )
       })
@@ -128,8 +128,8 @@ $( document ).ready( function () {
   $( "#decrease" ).click( function() {
     overrideTemp -= 0.5;
     $.ajax({
-      type: "GET",
-      url: "/heating/override/" + overrideTemp
+      method: "POST",
+      url: "/heating/set/override/" + overrideTemp
     })
       .done( function () { getNewValues( true, false ) } );
   });
@@ -137,8 +137,8 @@ $( document ).ready( function () {
   $( "#increase" ).click( function() {
     overrideTemp += 0.5;
     $.ajax({
-      type: "GET",
-      url: "/heating/override/" + overrideTemp
+      method: "POST",
+      url: "/heating/set/override/" + overrideTemp
     })
       .done( function () { getNewValues( true, false ) } );
   });
@@ -146,8 +146,8 @@ $( document ).ready( function () {
   $( "#clear" ).click( function() {
     $( "#goneoutuntil" ).val( "" );
     $.ajax({
-      type: "GET",
-      url: "/heating/gone_out_until/null"
+      method: "POST",
+      url: "/heating/set/gone_out_until/null"
     })
       .done( function () { getNewValues( true, false ) } )
   });
