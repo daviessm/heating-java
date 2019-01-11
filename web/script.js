@@ -167,8 +167,8 @@ function disableClickHandlers() {
 
   $( "#clear" ).off( "click" );
 
-  if ($( "#goneoutuntil" ).clockTimePicker) {
-    $( "#goneoutuntil" ).clockTimePicker.dispose();
+  if ($( "#goneoutuntil" ).hasOwnProperty( "clockTimePicker" ) ) {
+    $( "#goneoutuntil" ).clockTimePicker( 'dispose' );
   }
 }
 
