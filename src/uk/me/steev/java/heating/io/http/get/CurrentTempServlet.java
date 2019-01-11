@@ -34,5 +34,16 @@ public class CurrentTempServlet extends GetServlet {
       response.getWriter().println(temperature);
       logger.debug("Request for " + pathInfo + ", sent " + temperature);
     }
+
+    for (BluetoothTemperatureSensor sensor : sensors.values()) {
+      if (sensor.getName().equals(pathInfo)) {
+        Float temperature = sensor.getCurrentTemperature();
+        response.setContentType("text/plain");
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().println(temperature);
+        logger.debug("Request for " + pathInfo + ", sent " + temperature);
+        break;
+      }
+    }
   }
 }
