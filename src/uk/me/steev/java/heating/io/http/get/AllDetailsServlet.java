@@ -18,6 +18,7 @@ import uk.me.steev.java.heating.controller.Heating;
 import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
 import uk.me.steev.java.heating.controller.TemperatureEvent;
+import uk.me.steev.java.heating.io.api.CallFailedException;
 import uk.me.steev.java.heating.io.boiler.RelayException;
 import uk.me.steev.java.heating.io.temperature.BluetoothTemperatureSensor;
 
@@ -66,6 +67,8 @@ public class AllDetailsServlet extends GetServlet {
     }
 
     json.put("currentsetpoint", heating.getDesiredTemperature());
+    json.put("proportion", heating.getProportion());
+
     List<TemperatureEvent> timesDueOn = heating.getProcessor().getTimesDueOn();
     TemperatureEvent next = null;
 
@@ -104,6 +107,14 @@ public class AllDetailsServlet extends GetServlet {
     json.put("override", heating.getOverrideDegrees());
 
     json.put("goneoutuntil", null == heating.getGoneOutUntilTime() ? JSONObject.NULL : heating.getGoneOutUntilTime());
+
+    try {
+      json.put("outside_temp", heating.getWeather().getLatestTemperature());
+      json.put("outside_apparent_temp", heating.getWeather().getApparentTemperature());
+    } catch (CallFailedException cfe) {
+      logger.catching(cfe);
+    }
+
     response.setStatus(HttpServletResponse.SC_OK);
     response.getWriter().println(json.toString(2));
   }
