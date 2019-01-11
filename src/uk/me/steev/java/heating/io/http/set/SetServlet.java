@@ -2,11 +2,12 @@ package uk.me.steev.java.heating.io.http.set;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.net.util.SubnetUtils;
-import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import inet.ipaddr.IPAddress;
+import inet.ipaddr.IPAddressSeqRange;
+import inet.ipaddr.IPAddressString;
 import uk.me.steev.java.heating.controller.Heating;
 import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
@@ -29,13 +30,19 @@ public class SetServlet extends HeatingServlet {
         remoteAddr = request.getRemoteAddr();
       }
 
-      for (String s : allowedFrom) {
-        SubnetUtils su = new SubnetUtils(s);
-        SubnetInfo si = su.getInfo();
+      IPAddressString remoteString = new IPAddressString(remoteAddr);
+      IPAddress remoteAddress = remoteString.getAddress();
 
-        if (si.isInRange(remoteAddr)) {
-          logger.debug(remoteAddr + " is in range " + s);
-          return true;
+      for (String s : allowedFrom) {
+        IPAddressString ipas = new IPAddressString(s);
+        IPAddress ipa = ipas.getAddress();
+        if ((ipa.isIPv4() && remoteAddress.isIPv4()) ||
+            (ipa.isIPv6() && remoteAddress.isIPv6())) {
+          IPAddressSeqRange ipasr = ipa.toSequentialRange();
+          if (ipasr.contains(remoteAddress)) {
+            logger.debug(remoteAddr + " is in range " + s);
+            return true;
+          }
         }
       }
       logger.debug(remoteAddr + " is not in ranges " + allowedFrom.toString());
