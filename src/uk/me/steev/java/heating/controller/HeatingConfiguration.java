@@ -62,7 +62,7 @@ public class HeatingConfiguration {
       JSONArray result = CONFIGURATION.getJSONObject(category).getJSONArray(setting);
       ArrayList<String> strings = new ArrayList<String>();
       for (Object o : result) {
-        strings.add((String) o);
+        strings.add(o.toString());
       }
       String[] array = new String[1];
       return strings.toArray(array);
