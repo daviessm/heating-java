@@ -11,7 +11,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.log.Slf4jLog;
 
 import uk.me.steev.java.heating.controller.Heating;
-import uk.me.steev.java.heating.io.http.get.AllDetailsAfterProcessServlet;
+import uk.me.steev.java.heating.io.http.get.AllDetailsServlet;
 import uk.me.steev.java.heating.io.http.get.CurrentTempServlet;
 import uk.me.steev.java.heating.io.http.get.DesiredTempServlet;
 import uk.me.steev.java.heating.io.http.get.ExternalWeatherServlet;
@@ -40,7 +40,7 @@ public class HttpAdapter {
       handler.addServletWithMapping(new ServletHolder(new ProportionServlet(heating)), "/get/proportion");
       handler.addServletWithMapping(new ServletHolder(new ExternalWeatherServlet(heating)), "/get/weather/*");
       handler.addServletWithMapping(new ServletHolder(new StatusServlet(heating)), "/get/status/*");
-      handler.addServletWithMapping(new ServletHolder(new AllDetailsAfterProcessServlet(heating)), "/get/all_details/*");
+      handler.addServletWithMapping(new ServletHolder(new AllDetailsServlet(heating)), "/get/all_details/*");
       handler.addServletWithMapping(new ServletHolder(new SetOverrideServlet(heating)), "/set/override/*");
       handler.addServletWithMapping(new ServletHolder(new SetGoneOutUntilServlet(heating)), "/set/gone_out_until/*");
       handler.addServletWithMapping(new ServletHolder(new RefreshServlet(heating)), "/refresh/*");
