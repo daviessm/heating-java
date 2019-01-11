@@ -22,9 +22,9 @@ function getNewValues( immediate, initial ) {
 
 function processNewValues( data ) {
   if (data.allowed_update) {
-    enableClickHandlers();
+    enableChanges();
   } else {
-    disableClickHandlers();
+    disableChanges();
   }
 
   for ( var key in data.temps ) {
@@ -110,33 +110,39 @@ function processNewValues( data ) {
   }
 }
 
-function enableClickHandlers() {
-  $( "#decrease" ).click( function() {
-    overrideTemp -= 0.5;
-    $.ajax({
-      method: "POST",
-      url: "/heating/set/override/" + overrideTemp
-    })
-      .done( function () { getNewValues( true, false ) } );
-  });
+function enableChanges() {
+  $( "#decrease" ).show()
+    .click( function() {
+      overrideTemp -= 0.5;
+      $.ajax({
+        method: "POST",
+        url: "/heating/set/override/" + overrideTemp
+      })
+        .done( function () { getNewValues( true, false ) } );
+    }
+  );
 
-  $( "#increase" ).click( function() {
-    overrideTemp += 0.5;
-    $.ajax({
-      method: "POST",
-      url: "/heating/set/override/" + overrideTemp
-    })
-      .done( function () { getNewValues( true, false ) } );
-  });
+  $( "#increase" ).show()
+    .click( function() {
+      overrideTemp += 0.5;
+      $.ajax({
+        method: "POST",
+        url: "/heating/set/override/" + overrideTemp
+      })
+        .done( function () { getNewValues( true, false ) } );
+    }
+  );
 
-  $( "#clear" ).click( function() {
-    $( "#goneoutuntil" ).val( "" );
-    $.ajax({
-      method: "POST",
-      url: "/heating/set/gone_out_until/null"
-    })
-      .done( function () { getNewValues( true, false ) } )
-  });
+  $( "#clear" ).show()
+    .click( function() {
+      $( "#goneoutuntil" ).val( "" );
+      $.ajax({
+        method: "POST",
+        url: "/heating/set/gone_out_until/null"
+      })
+        .done( function () { getNewValues( true, false ) } )
+    }
+  );
 
   $( "#goneoutuntil" ).clockTimePicker({
     precision: 10,
@@ -160,12 +166,15 @@ function enableClickHandlers() {
   });
 }
 
-function disableClickHandlers() {
-  $( "#decrease" ).off( "click" );
+function disableChanges() {
+  $( "#decrease" ).hide()
+                  .off( "click" );
 
-  $( "#increase" ).off( "click" );
+  $( "#increase" ).hide()
+                  .off( "click" );
 
-  $( "#clear" ).off( "click" );
+  $( "#clear" ).hide()
+               .off( "click" );
 
   if ($( "#goneoutuntil" ).hasOwnProperty( "clockTimePicker" ) ) {
     $( "#goneoutuntil" ).clockTimePicker( 'dispose' );
