@@ -16,8 +16,8 @@ public class Boiler {
   protected LocalDateTime timeHeatingOff;
 
   public Boiler() throws RelayException, HeatingException {
-    this.heatingRelay = Relay.findRelay(HeatingConfiguration.getRelay("heating"));
-    this.preheatRelay = Relay.findRelay(HeatingConfiguration.getRelay("preheat"));
+    this.heatingRelay = Relay.findRelay(HeatingConfiguration.getArray("relays", "heating"));
+    this.preheatRelay = Relay.findRelay(HeatingConfiguration.getArray("relays", "preheat"));
 
     this.timeHeatingOff = LocalDateTime.now().minusDays(1);
   }

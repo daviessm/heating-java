@@ -57,17 +57,17 @@ public class HeatingConfiguration {
     }
   }
 
-  public static String[] getRelay(String name) throws HeatingException {
+  public static String[] getArray(String category, String setting) throws HeatingException {
     try {
-      JSONArray result = CONFIGURATION.getJSONObject("relays").getJSONArray(name);
+      JSONArray result = CONFIGURATION.getJSONObject(category).getJSONArray(setting);
       ArrayList<String> strings = new ArrayList<String>();
-      for (int i = 0; i < result.length(); i++) {
-        strings.add(String.valueOf(result.getInt(i)));
+      for (Object o : result) {
+        strings.add((String) o);
       }
       String[] array = new String[1];
       return strings.toArray(array);
     } catch (JSONException jsone) {
-      throw new HeatingException("relays." + name + " not found", jsone);
+      throw new HeatingException(category + "." + setting + " not found", jsone);
     }
   }
 }
