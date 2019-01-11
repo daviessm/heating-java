@@ -91,7 +91,11 @@
 			<exclusions>
 				<exclusion>
 					<groupId>ch.qos.logback</groupId>
-					<artifactId>logback-parent</artifactId>
+					<artifactId>logback-classic</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>ch.qos.logback</groupId>
+					<artifactId>logback-core</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
