@@ -1,5 +1,7 @@
 package uk.me.steev.java.heating.io.http.set;
 
+import java.util.Arrays;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.LogManager;
@@ -45,7 +47,7 @@ public class SetServlet extends HeatingServlet {
           }
         }
       }
-      logger.debug(remoteAddr + " is not in ranges " + allowedFrom.toString());
+      logger.debug(remoteAddr + " is not in ranges " + Arrays.toString(allowedFrom));
     } catch (HeatingException e) {
       logger.catching(e);
       e.printStackTrace();
