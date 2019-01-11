@@ -25,10 +25,10 @@ public class CurrentTempServlet extends GetServlet {
       throws ServletException, IOException {
     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 
-    String pathInfo = request.getPathInfo().replaceFirst("/", "").toUpperCase();
+    String pathInfo = request.getPathInfo().replaceFirst("/", "");
     Map<String, BluetoothTemperatureSensor> sensors = heating.getSensors();
-    if (sensors.containsKey(pathInfo)) {
-      Float temperature = sensors.get(pathInfo).getCurrentTemperature();
+    if (sensors.containsKey(pathInfo.toUpperCase())) {
+      Float temperature = sensors.get(pathInfo.toUpperCase()).getCurrentTemperature();
       response.setContentType("text/plain");
       response.setStatus(HttpServletResponse.SC_OK);
       response.getWriter().println(temperature);
