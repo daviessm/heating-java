@@ -24,7 +24,7 @@ public class SetGoneOutUntilServlet extends SetServlet {
   
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    if (!checkAllowed(request)) {
+    if (!allowedUpdate(request)) {
       response.setStatus(HttpServletResponse.SC_FORBIDDEN);
       return;
     }

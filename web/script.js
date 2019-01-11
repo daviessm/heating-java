@@ -15,32 +15,18 @@ function getNewValues( immediate, initial ) {
     processNewValues( data );
   })
   .always( function( data, textStatus, jqXHR ) {
-    $( "#goneoutuntil" ).clockTimePicker({
-      precision: 10,
-      afternoonHoursInOuterCircle: true,
-      minimum: moment().add( 1, 'hours' ).format( "HH:mm" ),
-      required: true,
-      onChange:( function( newValue, oldValue ) {
-        var newTime = moment();
-        var hours = newValue.substring( 0, 2 );
-        var minutes = newValue.substring( 3, 5 );
-        newTime.hour(hours);
-        newTime.minute(minutes);
-        newTime.second(0);
-        newTime.millisecond(0);
-        $.ajax({
-          method: "POST",
-          url: "/heating/set/gone_out_until/" + newTime.format()
-        })
-        .done( function () { getNewValues( true, false ) } )
-      })
-    });
     if ( initial )
       setTimeout( function() { getNewValues( false, initial )}, 55000 );
   });
 }
 
 function processNewValues( data ) {
+  if (data.allowed_update) {
+    enableClickHandlers();
+  } else {
+    disableClickHandlers();
+  }
+
   for ( var key in data.temps ) {
     let timeout = $( "#"+key+"temp" ).data( "timeout" );
     if ( timeout != 0 )
@@ -124,7 +110,7 @@ function processNewValues( data ) {
   }
 }
 
-$( document ).ready( function () {
+function enableClickHandlers() {
   $( "#decrease" ).click( function() {
     overrideTemp -= 0.5;
     $.ajax({
@@ -152,5 +138,40 @@ $( document ).ready( function () {
       .done( function () { getNewValues( true, false ) } )
   });
 
+  $( "#goneoutuntil" ).clockTimePicker({
+    precision: 10,
+    afternoonHoursInOuterCircle: true,
+    minimum: moment().add( 1, 'hours' ).format( "HH:mm" ),
+    required: true,
+    onChange:( function( newValue, oldValue ) {
+      var newTime = moment();
+      var hours = newValue.substring( 0, 2 );
+      var minutes = newValue.substring( 3, 5 );
+      newTime.hour(hours);
+      newTime.minute(minutes);
+      newTime.second(0);
+      newTime.millisecond(0);
+      $.ajax({
+        method: "POST",
+        url: "/heating/set/gone_out_until/" + newTime.format()
+      })
+      .done( function () { getNewValues( true, false ) } )
+    })
+  });
+}
+
+function disableClickHandlers() {
+  $( "#decrease" ).off( "click" );
+
+  $( "#increase" ).off( "click" );
+
+  $( "#clear" ).off( "click" );
+
+  if ($( "#goneoutuntil" ).clockTimePicker) {
+    $( "#goneoutuntil" ).clockTimePicker.dispose();
+  }
+}
+
+$( document ).ready( function () {
   getNewValues( true, true );
 });

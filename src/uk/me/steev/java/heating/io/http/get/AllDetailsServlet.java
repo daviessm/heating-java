@@ -115,6 +115,8 @@ public class AllDetailsServlet extends GetServlet {
       logger.catching(cfe);
     }
 
+    json.put("allowed_update", allowedUpdate(request));
+
     response.setStatus(HttpServletResponse.SC_OK);
     response.getWriter().println(json.toString(2));
   }
