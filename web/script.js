@@ -65,15 +65,15 @@ function processNewValues( data ) {
     if ( timeout != 0 )
       clearTimeout( timeout );
     $( "#currentsetpoint" ).data( "timeout", setTimeout(function() { $( "#currentsetpoint" ).text( "Unknown" ); }, 121000 ) );
-    var currentsetpoint = Number(data.currentsetpoint.toFixed(1));
+    let currentsetpoint = Number(data.currentsetpoint.toFixed(1));
     overrideTemp = Number(data.override.toFixed(1));
 
     if ( overrideTemp > 0 ) {
-      currentsetpoint = currentsetpoint + "+" + overrideTemp + "&deg;";
+      currentsetpoint = "" + currentsetpoint + "+" + overrideTemp + "&deg;";
     } else if ( overrideTemp < 0 ) {
-      currentsetpoint = currentsetpoint + overrideTemp + "&deg;";
+      currentsetpoint = "" + currentsetpoint + overrideTemp + "&deg;";
     } else {
-      currentsetpoint = currentsetpoint + "&deg;";
+      currentsetpoint = "" + currentsetpoint + "&deg;";
     }
     $( "#currentsetpoint" ).html( currentsetpoint );
 
