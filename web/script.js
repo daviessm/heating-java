@@ -112,6 +112,7 @@ function processNewValues( data ) {
 
 function enableChanges() {
   $( "#decrease" ).show()
+    .off( "click" )
     .click( function() {
       overrideTemp -= 0.5;
       $.ajax({
@@ -123,6 +124,7 @@ function enableChanges() {
   );
 
   $( "#increase" ).show()
+    .off( "click" )
     .click( function() {
       overrideTemp += 0.5;
       $.ajax({
@@ -134,6 +136,7 @@ function enableChanges() {
   );
 
   $( "#clear" ).show()
+    .off( "click" )
     .click( function() {
       $( "#goneoutuntil" ).val( "" );
       $.ajax({
