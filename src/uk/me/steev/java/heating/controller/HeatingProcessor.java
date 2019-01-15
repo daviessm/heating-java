@@ -208,9 +208,10 @@ public class HeatingProcessor implements Runnable, Processable {
               if (null != goneOutUntilTime &&
                   goneOutUntilTime.isBefore(eventEndTime)) {
                 timesDueOn.add(new TemperatureEvent(goneOutUntilTime, goneOutUntilTime, eventEndTime, eventTemperature));
-              } else if ((null != goneOutUntilTime &&
-                          goneOutUntilTime.isAfter(eventEndTime)) ||
-                         null == goneOutUntilTime){
+              } else if (null != goneOutUntilTime && goneOutUntilTime.isAfter(eventEndTime)) {
+                //If the gone out time is after the event ends, the event may as well not exist.
+                continue;
+              } else {
                 timesDueOn.add(new TemperatureEvent(eventStartTime, eventStartTime, eventEndTime, eventTemperature));
               }
             } else if (eventStartTime.isAfter(LocalDateTime.now())) {
