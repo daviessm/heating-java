@@ -147,6 +147,9 @@ function enableChanges() {
     }
   );
 
+  if ($( "#goneoutuntil" ).hasOwnProperty( "clockTimePicker" ) ) {
+    $( "#goneoutuntil" ).clockTimePicker( 'dispose' );
+  }
   $( "#goneoutuntil" ).clockTimePicker({
     precision: 10,
     afternoonHoursInOuterCircle: true,

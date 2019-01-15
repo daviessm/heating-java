@@ -125,6 +125,17 @@
     height: 100%;
    }
 
+   div.goneouttime {
+    display: inline-block;
+    border: 1px solid #ddd;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    padding-top: 20px;
+    padding-right: 10px;
+    padding-left: 10px;
+    height: 100%;
+   }
+
   </style>
  </head>
 
@@ -164,7 +175,7 @@
   <br />
   <div class="normal">
    Out until:
-   <input id="goneoutuntil" type="text" value="" data-timeout="0"/>
+   <div id="goneoutuntil" class="goneouttime" data-timeout="0" />
    <input id="clear" type="button" value="Clear" />
   </div>
  </body>
