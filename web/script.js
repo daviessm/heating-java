@@ -28,11 +28,12 @@ function processNewValues( data ) {
   }
 
   for ( var key in data.temps ) {
-    let timeout = $( "#"+key+"temp" ).data( "timeout" );
+    let sensor = key;
+    let timeout = $( "#"+sensor+"temp" ).data( "timeout" );
     if ( timeout != 0 )
       clearTimeout( timeout );
-    $( "#"+key+"temp" ).html( data.temps[key].toFixed(1) + "&deg;" );
-    $( "#"+key+"temp" ).data( "timeout", setTimeout(function() { $( "#"+key+"temp" ).text( "Unknown" ); }, 121000) );
+    $( "#"+sensor+"temp" ).html( data.temps[sensor].toFixed(1) + "&deg;" );
+    $( "#"+sensor+"temp" ).data( "timeout", setTimeout(function() { $( "#"+sensor+"temp" ).text( "Unknown" ); }, 121000) );
   }
 
   if ( data.hasOwnProperty( "heating" ) ) {
