@@ -191,3 +191,9 @@ function disableChanges() {
 $( document ).ready( function () {
   getNewValues( true, true );
 });
+
+$ ( document ).on( "visibilitychange", function() {
+  if ( !document.hidden ) {
+    getNewValues( true, false );
+  }
+});
