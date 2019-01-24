@@ -71,7 +71,7 @@ public class Heating {
 
       //Notify systemd (if running) that startup has finished
       SDNotify.sendNotify();
-    } catch (RelayException | IOException e) {
+    } catch (RelayException e) {
       throw new HeatingException("Error creating Heating object", e);
     }
   }
@@ -80,7 +80,10 @@ public class Heating {
     this(new File("config.json"));
   }
 
-  public void start() {
+  public void start() throws IOException, HeatingException {
+    //Get initial calendar information
+    this.calendar.init();
+
     //Look for new sensors every minute
     this.scheduledExecutor.scheduleAtFixedRate(this.scanner, 0, 1, TimeUnit.MINUTES);
 
@@ -243,8 +246,8 @@ public class Heating {
     try {
       Heating heating = new Heating();
       heating.start();
-    } catch (HeatingException he) {
-      he.printStackTrace();
+    } catch (HeatingException | IOException e) {
+      e.printStackTrace();
     }
   }
 }

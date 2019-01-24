@@ -78,7 +78,11 @@ public class CalendarAdapter {
       }
   }
 
-  public CalendarAdapter() throws IOException, HeatingException {
+  public CalendarAdapter(Processable afterEventsUpdatedCallback) {
+    this.afterEventsUpdatedCallback = afterEventsUpdatedCallback;
+  }
+
+  public void init() throws IOException, HeatingException {
     cachedEvents = new ArrayList<Event>(10);
     eventsUpdater = new EventsUpdater();
 
@@ -117,11 +121,6 @@ public class CalendarAdapter {
           HTTP_TRANSPORT, JSON_FACTORY, credential)
           .setApplicationName("heating-java")
           .build();
-  }
-
-  public CalendarAdapter(Processable afterEventsUpdatedCallback) throws IOException, HeatingException {
-    this();
-    this.afterEventsUpdatedCallback = afterEventsUpdatedCallback;
   }
 
   public void update() throws IOException, HeatingException {
