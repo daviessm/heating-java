@@ -123,7 +123,7 @@ public class CalendarAdapter {
           .build();
   }
 
-  public void update() throws IOException, HeatingException {
+  public void update() throws HeatingException {
     DateTime now = new DateTime(System.currentTimeMillis());
 
     String calendarId = HeatingConfiguration.getStringSetting("calendar", "calendar_id");
@@ -136,24 +136,28 @@ public class CalendarAdapter {
 
     this.uuid = UUID.randomUUID();
 
-    logger.debug("Getting calendar events for calendar " + calendarId);
-    cachedEvents = calendar.events().list(calendarId)
-        .setMaxResults(10)
-        .setTimeMin(now)
-        .setOrderBy("startTime")
-        .setSingleEvents(true)
-        .execute()
-        .getItems();
-    logger.debug("Got events " + cachedEvents);
+    try {
+      logger.debug("Getting calendar events for calendar " + calendarId);
+      cachedEvents = calendar.events().list(calendarId)
+          .setMaxResults(10)
+          .setTimeMin(now)
+          .setOrderBy("startTime")
+          .setSingleEvents(true)
+          .execute()
+          .getItems();
+      logger.debug("Got events " + cachedEvents);
 
-    Channel channel = new Channel();
-    channel.setId(uuid.toString());
-    channel.setExpiration(LocalDateTime.now().plus(updateInterval).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-    channel.setAddress(refreshAddress);
-    channel.setType("web_hook");
-    Watch watch = calendar.events().watch(calendarId, channel);
-    Channel responseChannel = watch.execute();
-    this.resourceId = responseChannel.getResourceId();
+      Channel channel = new Channel();
+      channel.setId(uuid.toString());
+      channel.setExpiration(LocalDateTime.now().plus(updateInterval).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+      channel.setAddress(refreshAddress);
+      channel.setType("web_hook");
+      Watch watch = calendar.events().watch(calendarId, channel);
+      Channel responseChannel = watch.execute();
+      this.resourceId = responseChannel.getResourceId();
+    } catch (IOException e) {
+      logger.catching(Level.WARN, e);
+    }
 
     if (null != afterEventsUpdatedCallback) {
       afterEventsUpdatedCallback.process();
@@ -224,7 +228,7 @@ public class CalendarAdapter {
     public void run() {
       try {
         update();
-      } catch (IOException | HeatingException e) {
+      } catch (HeatingException e) {
         logger.catching(Level.WARN, e);
         throw new RuntimeException(e);
       } catch (Throwable t) {
