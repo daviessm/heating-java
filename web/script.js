@@ -1,4 +1,5 @@
 var overrideTemp = Number(0.0);
+console.log("test");
 
 function getNewValues( immediate, initial ) {
   var url = "/heating/get/all_details";
