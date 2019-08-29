@@ -115,5 +115,11 @@
 			<artifactId>ipaddress</artifactId>
 			<version>5.0.0</version>
 		</dependency>
+		<dependency>
+			<groupId>de.bwaldvogel</groupId>
+			<artifactId>log4j-systemd-journal-appender</artifactId>
+			<version>2.4.0</version>
+			<scope>runtime</scope>
+		</dependency>
 	</dependencies>
 </project>
