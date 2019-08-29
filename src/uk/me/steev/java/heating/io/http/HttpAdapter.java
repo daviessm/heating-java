@@ -2,10 +2,11 @@ package uk.me.steev.java.heating.io.http;
 
 import java.io.IOException;
 
-  import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.server.AbstractNCSARequestLog;
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.log.Slf4jLog;
@@ -21,17 +22,18 @@ import uk.me.steev.java.heating.io.http.set.SetGoneOutUntilServlet;
 import uk.me.steev.java.heating.io.http.set.SetOverrideServlet;
 
 public class HttpAdapter {
-  static final Logger logger = LogManager.getLogger(HttpAdapter.class.getName());
+  private static final String format = "%{client}a %r: %O bytes sent in %{ms}Tms handled by %R; status %s%X";
+  private static final Logger logger = LogManager.getLogger(HttpAdapter.class.getName());
   protected static HttpAdapter SINGLETON = null;
   protected static Heating heating = null;
-  
+
   private HttpAdapter(Heating heating) {
     try {
       HttpAdapter.heating = heating;
       org.eclipse.jetty.util.log.Log.setLog(new Slf4jLog());
 
       Server server = new Server(8080);
-      
+
       ServletHandler handler = new ServletHandler();
       server.setHandler(handler);
 
@@ -45,7 +47,7 @@ public class HttpAdapter {
       handler.addServletWithMapping(new ServletHolder(new SetGoneOutUntilServlet(heating)), "/set/gone_out_until/*");
       handler.addServletWithMapping(new ServletHolder(new RefreshServlet(heating)), "/refresh/*");
 
-      server.setRequestLog(new AccessLogHandler());
+      server.setRequestLog(new CustomRequestLog(new Slf4jRequestLogWriter(), format));
       server.start();
 
     } catch (Exception e) {
@@ -56,24 +58,7 @@ public class HttpAdapter {
   public static HttpAdapter getHttpAdapter(Heating heating) {
     if (null == HttpAdapter.SINGLETON)
       HttpAdapter.SINGLETON = new HttpAdapter(heating);
-    
+
     return HttpAdapter.SINGLETON;
-  }
-
-  public class AccessLogHandler extends AbstractNCSARequestLog {
-    private Logger logger = LogManager.getLogger(this.getClass().getName());
-    {
-      this.setPreferProxiedForAddress(true);
-    }
-
-    @Override
-    protected boolean isEnabled() {
-      return true;
-    }
-
-    @Override
-    public void write(String requestEntry) throws IOException {
-      logger.info(requestEntry);
-    }
   }
 }
