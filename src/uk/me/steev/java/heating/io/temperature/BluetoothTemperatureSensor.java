@@ -167,7 +167,7 @@ public abstract class BluetoothTemperatureSensor {
       sensor = new SensorTagSensor(device);
       break;
     default:
-      logger.info("Unknown device " + device.getName());
+      logger.trace("Unknown device " + device.getName());
     }
     return sensor;
   }
@@ -179,7 +179,7 @@ public abstract class BluetoothTemperatureSensor {
       DeviceManager manager = DeviceManager.createInstance(false);
       BluetoothAdapter adapter = manager.getAdapter();
       LocalDateTime startedAt = LocalDateTime.now();
-  
+
       logger.debug("Start scanning for devices");
       if (adapter.isDiscovering()) {
         adapter.stopDiscovery();
