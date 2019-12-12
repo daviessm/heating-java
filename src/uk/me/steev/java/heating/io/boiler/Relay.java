@@ -2,11 +2,15 @@ package uk.me.steev.java.heating.io.boiler;
 
 import java.util.ArrayList;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import uk.me.steev.java.heating.controller.HeatingConfiguration.RelayConfiguration;
 import uk.me.steev.java.heating.io.boiler.usb.PhysicalRelay;
 import uk.me.steev.java.heating.io.boiler.usb.UsbRelayBoard;
 
 public class Relay {
+  private static final Logger logger = LogManager.getLogger(Relay.class.getName());
   private RelayType relayType;
   private ArrayList<String> address;
   private int relayNumber;
@@ -16,6 +20,7 @@ public class Relay {
     switch (relayType) {
     case USB:
       UsbRelayBoard board = UsbRelayBoard.getRelay(relayConfiguration.getAddress());
+      logger.info(board.toString());
       relay = new PhysicalRelay(board, relayConfiguration.getRelayNumber());
     }
 

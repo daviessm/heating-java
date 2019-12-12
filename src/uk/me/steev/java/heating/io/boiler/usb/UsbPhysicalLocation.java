@@ -2,10 +2,10 @@ package uk.me.steev.java.heating.io.boiler.usb;
 
 import java.util.Arrays;
 
-public class UsbPhysicalLocation {
+public class UsbPhysicalLocation implements Comparable<UsbPhysicalLocation> {
   protected int busNumber;
   protected byte[] locationOnBus;
-  
+
   public UsbPhysicalLocation(int busNumber, byte[] physicalLocation) {
     this.busNumber = busNumber;
     this.locationOnBus = physicalLocation;
@@ -25,6 +25,13 @@ public class UsbPhysicalLocation {
 
   public void setLocationOnBus(byte[] physicalLocation) {
     this.locationOnBus = physicalLocation;
+  }
+
+  public int compareTo(UsbPhysicalLocation upl) {
+    if (null == upl)
+      return -1;
+
+    return this.toString().compareTo(upl.toString());
   }
 
   @Override

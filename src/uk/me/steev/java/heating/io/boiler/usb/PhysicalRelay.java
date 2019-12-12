@@ -34,6 +34,6 @@ public class PhysicalRelay extends Relay {
   }
 
   public String toString() {
-    return board.getDevice().toString() + " relayNumber " + this.relayNumber;
+    return board.getDevice().getPhysicalLocation().toString() + " relayNumber " + this.relayNumber;
   }
 }
