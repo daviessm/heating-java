@@ -30,7 +30,7 @@ public class UsbDevice {
         throw new UsbException("Unable to detach kernel driver for " + this.toString());
     this.isOpen = true;
   }
-  
+
   public void controlTransfer(byte[] data) throws UsbException {
     ByteBuffer buffer = ByteBuffer.allocateDirect(data.length);
     buffer.put(data);
@@ -39,6 +39,21 @@ public class UsbDevice {
       logger.error(LibUsb.errorName(ret));
       throw new UsbException("Unable to send control transfer message for device " + this.device);
     }
+  }
+
+  public void reset() throws UsbException {
+    LibUsb.close(this.handle);
+    this.isOpen = false;
+
+    this.handle = new DeviceHandle();
+    if (LibUsb.open(device, this.handle) < 0)
+      throw new UsbException("Unable to open device " + this.toString());
+    
+    if (LibUsb.kernelDriverActive(handle, 0) == 1)
+      if (LibUsb.detachKernelDriver(handle, 0) < 0)
+        throw new UsbException("Unable to detach kernel driver for " + this.toString());
+    this.isOpen = true;
+
   }
 
   public Device getDevice() {

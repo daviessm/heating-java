@@ -63,6 +63,11 @@ public class UsbRelayBoard {
       this.device.controlTransfer(new byte[]{(byte)0xFF, (byte)relayNumber, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00});
     } catch (UsbException ue) {
       logger.catching(Level.ERROR, ue);
+      try {
+        device.reset();
+      } catch (UsbException e) {
+        logger.catching(Level.FATAL, e);
+      }
     }
   }
 
@@ -72,6 +77,11 @@ public class UsbRelayBoard {
       this.device.controlTransfer(new byte[]{(byte)0xFD, (byte)relayNumber, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00});
     } catch (UsbException ue) {
       logger.catching(Level.ERROR, ue);
+      try {
+        device.reset();
+      } catch (UsbException e) {
+        logger.catching(Level.FATAL, e);
+      }
     }
   }
 
