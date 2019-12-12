@@ -1,14 +1,53 @@
 package uk.me.steev.java.heating.io.boiler;
 
-import uk.me.steev.java.heating.io.boiler.usb.UsbRelay;
+import java.util.ArrayList;
 
-public abstract class Relay {
-  public static Relay findRelay(String[] address) throws RelayException {
-    return UsbRelay.getRelay(address);
+import uk.me.steev.java.heating.controller.HeatingConfiguration.RelayConfiguration;
+import uk.me.steev.java.heating.io.boiler.usb.PhysicalRelay;
+import uk.me.steev.java.heating.io.boiler.usb.UsbRelayBoard;
+
+public class Relay {
+  private RelayType relayType;
+  private ArrayList<String> address;
+  private int relayNumber;
+
+  public static Relay findRelay(RelayType relayType, RelayConfiguration relayConfiguration) {
+    Relay relay = null;
+    switch (relayType) {
+    case USB:
+      UsbRelayBoard board = UsbRelayBoard.getRelay(relayConfiguration.getAddress());
+      relay = new PhysicalRelay(board, relayConfiguration.getRelayNumber());
+    }
+
+    return relay;
   }
 
-  public abstract void on() throws RelayException;
-  public abstract void off() throws RelayException;
+  public void on() throws RelayException {}
+  public void off() throws RelayException {}
 
-  public abstract boolean isOn() throws RelayException;
+  public boolean isOn() throws RelayException {
+    return false;
+  }
+
+  public RelayType getRelayType() {
+    return relayType;
+  }
+  public void setRelayType(RelayType relayType) {
+    this.relayType = relayType;
+  }
+  public ArrayList<String> getAddress() {
+    return address;
+  }
+
+  public void setAddress(ArrayList<String> address) {
+    this.address = address;
+  }
+
+  public int getRelayNumber() {
+    return relayNumber;
+  }
+
+  public void setRelayNumber(int relayNumber) {
+    this.relayNumber = relayNumber;
+  }
 }

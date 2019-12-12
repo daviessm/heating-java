@@ -1,6 +1,7 @@
 package uk.me.steev.java.heating.io.boiler;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,8 +17,9 @@ public class Boiler {
   protected LocalDateTime timeHeatingOff;
 
   public Boiler() throws RelayException, HeatingException {
-    this.heatingRelay = Relay.findRelay(HeatingConfiguration.getArray("relays", "heating"));
-    this.preheatRelay = Relay.findRelay(HeatingConfiguration.getArray("relays", "preheat"));
+    Map<String, HeatingConfiguration.RelayConfiguration> allRelays = HeatingConfiguration.getRelayConfiguration();
+    this.heatingRelay = Relay.findRelay(RelayType.USB, allRelays.get("heating"));
+    this.preheatRelay = Relay.findRelay(RelayType.USB, allRelays.get("preheat"));
 
     this.timeHeatingOff = LocalDateTime.now().minusDays(1);
   }
