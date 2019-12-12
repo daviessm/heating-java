@@ -26,10 +26,8 @@ public class HeatingConfiguration {
   private HeatingConfiguration(File configurationLocation) throws HeatingException {
     try {
       HeatingConfiguration.CONFIGURATION = JSONUtils.readJsonFromFile(configurationLocation);
-    } catch (JSONException jsone) {
-      throw new HeatingException("Cannot get configuration", jsone);
-    } catch (IOException ioe) {
-      throw new HeatingException("Cannot get configuration", ioe);
+    } catch (JSONException | IOException e) {
+      throw new HeatingException("Cannot get configuration", e);
     }
   }
 
