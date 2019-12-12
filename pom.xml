@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>uk.me.steev.java.heating</groupId>
 	<artifactId>heating</artifactId>
-	<version>0.0.3-SNAPSHOT</version>
+	<version>0.0.4-SNAPSHOT</version>
 	<name>heating-java</name>
 	<description>Java version of the Python heating project</description>
 	<build>
