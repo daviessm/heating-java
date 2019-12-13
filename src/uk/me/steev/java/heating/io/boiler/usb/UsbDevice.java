@@ -22,9 +22,13 @@ public class UsbDevice {
     this.descriptor = descriptor;
     this.physicalLocation = new UsbPhysicalLocation(LibUsb.getBusNumber(device), UsbUtils.getDevicePhysicalLocation(this));
     this.handle = new DeviceHandle();
+
     if (LibUsb.open(device, this.handle) < 0)
       throw new UsbException("Unable to open device " + this.toString());
-    
+
+    if (LibUsb.claimInterface(this.handle, 0) < 0)
+      throw new UsbException("Unable to claim interface 0 on device " + this.toString());
+
     if (LibUsb.kernelDriverActive(handle, 0) == 1)
       if (LibUsb.detachKernelDriver(handle, 0) < 0)
         throw new UsbException("Unable to detach kernel driver for " + this.toString());
@@ -49,6 +53,9 @@ public class UsbDevice {
     if (LibUsb.open(device, this.handle) < 0)
       throw new UsbException("Unable to open device " + this.toString());
     
+    if (LibUsb.claimInterface(this.handle, 0) < 0)
+      throw new UsbException("Unable to claim interface 0 on device " + this.toString());
+
     if (LibUsb.kernelDriverActive(handle, 0) == 1)
       if (LibUsb.detachKernelDriver(handle, 0) < 0)
         throw new UsbException("Unable to detach kernel driver for " + this.toString());
