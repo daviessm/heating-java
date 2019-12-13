@@ -10,11 +10,12 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
   
   @Override
   protected void updateTemperatureFromBluetooth() throws BluetoothException {
-    String tempStatus = "";
+    String tempStatus = "LED on";
     logger.trace("Red LED on for " + this.toString());
     this.writeToUuid("f000aa65-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
     this.writeToUuid("f000aa66-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
-    
+
+    tempStatus = "Temperature sensor on";
     logger.trace("Temperature sensor on for " + this.toString());
     this.writeToUuid("f000aa02-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
     
@@ -39,10 +40,12 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
       float objectTempCelsius = objectTempRaw / 128f;
       float ambientTempCelsius = ambientTempRaw / 128f;
 
+      tempStatus = "Iteration " + x + " LED off";
       logger.trace("Red LED off for " + this.toString() + " after " + x + " iterations");
       this.writeToUuid("f000aa65-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
       this.writeToUuid("f000aa66-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
-      
+
+      tempStatus = "Iteration " + x + " temperature sensor off";
       logger.trace("Temperature sensor off for " + this.toString());
       this.writeToUuid("f000aa02-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
 
