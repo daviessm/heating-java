@@ -39,6 +39,7 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
       @SuppressWarnings("unused")
       float objectTempCelsius = objectTempRaw / 128f;
       float ambientTempCelsius = ambientTempRaw / 128f;
+      this.currentTemperature = ambientTempCelsius;
 
       tempStatus = "Iteration " + x + " LED off";
       logger.trace("Red LED off for " + this.toString() + " after " + x + " iterations");
@@ -49,7 +50,6 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
       logger.trace("Temperature sensor off for " + this.toString());
       this.writeToUuid("f000aa02-0451-4000-b000-000000000000", new byte[]{(byte)0x00});
 
-      this.currentTemperature = ambientTempCelsius;
       return;
     }
     throw new BluetoothException("Could not get temperature, last event was: " + tempStatus);
