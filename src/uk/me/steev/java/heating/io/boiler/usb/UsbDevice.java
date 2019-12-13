@@ -26,12 +26,13 @@ public class UsbDevice {
     if (LibUsb.open(device, this.handle) < 0)
       throw new UsbException("Unable to open device " + this.toString());
 
-    if (LibUsb.claimInterface(this.handle, 0) < 0)
-      throw new UsbException("Unable to claim interface 0 on device " + this.toString());
-
     if (LibUsb.kernelDriverActive(handle, 0) == 1)
       if (LibUsb.detachKernelDriver(handle, 0) < 0)
         throw new UsbException("Unable to detach kernel driver for " + this.toString());
+
+    if (LibUsb.claimInterface(this.handle, 0) < 0)
+      throw new UsbException("Unable to claim interface 0 on device " + this.toString());
+
     this.isOpen = true;
   }
 
@@ -52,15 +53,15 @@ public class UsbDevice {
     this.handle = new DeviceHandle();
     if (LibUsb.open(device, this.handle) < 0)
       throw new UsbException("Unable to open device " + this.toString());
-    
-    if (LibUsb.claimInterface(this.handle, 0) < 0)
-      throw new UsbException("Unable to claim interface 0 on device " + this.toString());
 
     if (LibUsb.kernelDriverActive(handle, 0) == 1)
       if (LibUsb.detachKernelDriver(handle, 0) < 0)
         throw new UsbException("Unable to detach kernel driver for " + this.toString());
-    this.isOpen = true;
 
+    if (LibUsb.claimInterface(this.handle, 0) < 0)
+      throw new UsbException("Unable to claim interface 0 on device " + this.toString());
+
+    this.isOpen = true;
   }
 
   public Device getDevice() {
