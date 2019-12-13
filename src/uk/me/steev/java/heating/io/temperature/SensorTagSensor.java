@@ -7,7 +7,7 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
   public SensorTagSensor(BluetoothDevice device) {
     super(device);
   }
-  
+
   @Override
   protected void updateTemperatureFromBluetooth() throws BluetoothException {
     String tempStatus = "LED on";
@@ -18,7 +18,7 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
     tempStatus = "Temperature sensor on";
     logger.trace("Temperature sensor on for " + this.toString());
     this.writeToUuid("f000aa02-0451-4000-b000-000000000000", new byte[]{(byte)0x01});
-    
+
     for (int x = 0; x < 4; x++) {
       tempStatus = "Iteration " + x + " sleeping";
       try {
@@ -54,5 +54,4 @@ public class SensorTagSensor extends BluetoothTemperatureSensor {
     }
     throw new BluetoothException("Could not get temperature, last event was: " + tempStatus);
   }
-
 }
