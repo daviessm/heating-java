@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import uk.me.steev.java.heating.io.boiler.Relay;
+import uk.me.steev.java.heating.io.boiler.RelayException;
 
 public class PhysicalRelay extends Relay {
   private static final Logger logger = LogManager.getLogger(PhysicalRelay.class.getName());
@@ -15,27 +16,23 @@ public class PhysicalRelay extends Relay {
   public PhysicalRelay(UsbRelayBoard board, int relayNumber) {
     this.relayNumber = relayNumber;
     this.board = board;
-    this.off();
+    try {
+      this.off();
+    } catch (RelayException e) {
+      logger.catching(Level.FATAL, e);
+    }
   }
 
-  public void on() {
+  public void on() throws RelayException {
     logger.trace("Relay ON: " + this.toString());
-    try {
-      this.board.on(this.relayNumber);
-      this.on = true;
-    } catch (UsbException e) {
-      logger.catching(Level.FATAL, e);
-    }
+    this.board.on(this.relayNumber);
+    this.on = true;
   }
 
-  public void off() {
+  public void off() throws RelayException {
     logger.trace("Relay OFF: " + this.toString());
-    try {
-      this.board.off(this.relayNumber);
-      this.on = false;
-    } catch (UsbException e) {
-      logger.catching(Level.FATAL, e);
-    }
+    this.board.off(this.relayNumber);
+    this.on = false;
   }
 
   public boolean isOn() {
