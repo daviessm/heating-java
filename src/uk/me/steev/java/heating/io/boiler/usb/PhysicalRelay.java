@@ -1,5 +1,6 @@
 package uk.me.steev.java.heating.io.boiler.usb;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,14 +20,22 @@ public class PhysicalRelay extends Relay {
 
   public void on() {
     logger.trace("Relay ON: " + this.toString());
-    this.board.on(this.relayNumber);
-    this.on = true;
+    try {
+      this.board.on(this.relayNumber);
+      this.on = true;
+    } catch (UsbException e) {
+      logger.catching(Level.FATAL, e);
+    }
   }
 
   public void off() {
     logger.trace("Relay OFF: " + this.toString());
-    this.board.off(this.relayNumber);
-    this.on = false;
+    try {
+      this.board.off(this.relayNumber);
+      this.on = false;
+    } catch (UsbException e) {
+      logger.catching(Level.FATAL, e);
+    }
   }
 
   public boolean isOn() {

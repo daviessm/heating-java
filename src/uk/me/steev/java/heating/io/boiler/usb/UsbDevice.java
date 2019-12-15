@@ -38,7 +38,12 @@ public class UsbDevice {
   public void controlTransfer(byte[] data) throws UsbException {
     ByteBuffer buffer = ByteBuffer.allocateDirect(data.length);
     buffer.put(data);
-    int ret = LibUsb.controlTransfer(this.handle, (byte)0x21, (byte)0x09, (short)768, (short)0, buffer, 1000);
+    int ret = 0;
+    try {
+      ret = LibUsb.controlTransfer(this.handle, (byte)0x21, (byte)0x09, (short)768, (short)0, buffer, 1000);
+    } catch (IllegalStateException e) {
+      throw new UsbException("Exception sending control transfer message for device " + this.device, e);
+    }
     if (ret < 0) {
       throw new UsbException("Unable to send control transfer message for device " + this.device + ": " + LibUsb.errorName(ret));
     }
@@ -46,11 +51,14 @@ public class UsbDevice {
 
   public void reset() throws UsbException {
     int ret = 0;
-    if ((ret = LibUsb.releaseInterface(this.handle, 0)) < 0)
+    try {
+      if ((ret = LibUsb.releaseInterface(this.handle, 0)) < 0)
+        logger.warn("Unable to release interface 0 on device " + this.toString() + ": " + LibUsb.errorName(ret));
+      LibUsb.close(this.handle);
+    } catch (IllegalStateException e) {
       //This is not a fatal error, carry on closing the handle anyway
-      logger.warn("Unable to release interface 0 on device " + this.toString() + ": " + LibUsb.errorName(ret));
+    }
 
-    LibUsb.close(this.handle);
     this.isOpen = false;
 
     this.handle = new DeviceHandle();

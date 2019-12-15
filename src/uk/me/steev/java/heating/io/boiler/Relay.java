@@ -20,7 +20,7 @@ public class Relay {
     switch (relayType) {
     case USB:
       UsbRelayBoard board = UsbRelayBoard.getRelay(relayConfiguration.getAddress());
-      logger.info(board.toString());
+      logger.info("Found relay " + board.toString() + " " + relayConfiguration.getRelayNumber());
       relay = new PhysicalRelay(board, relayConfiguration.getRelayNumber());
     }
 

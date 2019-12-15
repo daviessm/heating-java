@@ -60,31 +60,23 @@ public class UsbRelayBoard implements Comparable<UsbRelayBoard> {
     this.device = device;
   }
 
-  public void on(int relayNumber) {
+  public void on(int relayNumber) throws UsbException {
     logger.trace("Relay ON: " + this.toString());
     try {
       this.device.controlTransfer(new byte[]{(byte)0xFF, (byte)relayNumber, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00});
-    } catch (UsbException ue) {
-      logger.catching(Level.ERROR, ue);
-      try {
-        device.reset();
-      } catch (UsbException e) {
-        logger.catching(Level.FATAL, e);
-      }
+    } catch (UsbException e) {
+      logger.catching(Level.ERROR, e);
+      device.reset();
     }
   }
 
-  public void off(int relayNumber) {
+  public void off(int relayNumber) throws UsbException {
     logger.trace("Relay OFF: " + this.toString());
     try {
       this.device.controlTransfer(new byte[]{(byte)0xFD, (byte)relayNumber, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00});
     } catch (UsbException | IllegalStateException e) {
       logger.catching(Level.ERROR, e);
-      try {
-        device.reset();
-      } catch (UsbException ee) {
-        logger.catching(Level.FATAL, ee);
-      }
+      device.reset();
     }
   }
 
