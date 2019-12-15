@@ -9,7 +9,7 @@ import uk.me.steev.java.heating.controller.HeatingConfiguration.RelayConfigurati
 import uk.me.steev.java.heating.io.boiler.usb.PhysicalRelay;
 import uk.me.steev.java.heating.io.boiler.usb.UsbRelayBoard;
 
-public class Relay {
+public abstract class Relay {
   private static final Logger logger = LogManager.getLogger(Relay.class.getName());
   private RelayType relayType;
   private ArrayList<String> address;
@@ -27,12 +27,10 @@ public class Relay {
     return relay;
   }
 
-  public void on() throws RelayException {}
-  public void off() throws RelayException {}
+  public abstract void on() throws RelayException;
+  public abstract void off() throws RelayException;
 
-  public boolean isOn() throws RelayException {
-    return false;
-  }
+  public abstract boolean isOn() throws RelayException;
 
   public RelayType getRelayType() {
     return relayType;
