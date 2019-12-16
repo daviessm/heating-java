@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
+import uk.me.steev.java.heating.io.boiler.usb.UsbRelayBoard;
 import uk.me.steev.java.heating.io.boiler.usb.UsbUtils;
 
 public class Boiler {
@@ -26,6 +27,7 @@ public class Boiler {
   }
 
   public void reset() throws RelayException, HeatingException {
+    UsbRelayBoard.resetDeviceList();
     UsbUtils.reinitialiseDevices();
 
     Map<String, HeatingConfiguration.RelayConfiguration> allRelays = HeatingConfiguration.getRelayConfiguration();

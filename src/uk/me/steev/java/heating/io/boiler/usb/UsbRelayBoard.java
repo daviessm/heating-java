@@ -11,30 +11,31 @@ import org.apache.logging.log4j.Logger;
 
 public class UsbRelayBoard implements Comparable<UsbRelayBoard> {
   private static final Logger logger = LogManager.getLogger(UsbRelayBoard.class.getName());
+  private static Map<UsbPhysicalLocation, UsbDevice> ALL_DEVICES = null;
   private UsbDevice device;
 
   public static UsbRelayBoard getRelay(ArrayList<String> address) {
     if (address.size() < 2) //bus number, device number [, device number...]
       return null;
 
-    UsbRelayBoard urb = null;
-
     //Set up list of all devices
-    Map<UsbPhysicalLocation, UsbDevice> allDevices = new TreeMap<UsbPhysicalLocation, UsbDevice>();
-    logger.trace("Looking for USB devices");
-    List<UsbDevice> devices = null;
+    if (null == ALL_DEVICES) {
+      ALL_DEVICES = new TreeMap<UsbPhysicalLocation, UsbDevice>();
+      logger.trace("Looking for USB devices");
+      List<UsbDevice> devices = null;
 
-    try {
-      devices = UsbUtils.findDevices("16C0", "05DF");
-      for (UsbDevice device : devices) {
-        allDevices.put(device.getPhysicalLocation(), device);
-        logger.debug("Found device at " + device.getPhysicalLocation());
+      try {
+        devices = UsbUtils.findDevices("16C0", "05DF");
+        for (UsbDevice device : devices) {
+          ALL_DEVICES.put(device.getPhysicalLocation(), device);
+          logger.debug("Found device at " + device.getPhysicalLocation());
+        }
+      } catch (UsbException ue) {
+        logger.catching(Level.ERROR, ue);
       }
-    } catch (UsbException ue) {
-      logger.catching(Level.ERROR, ue);
     }
 
-    for (UsbPhysicalLocation physicalLocation : allDevices.keySet()) {
+    for (UsbPhysicalLocation physicalLocation : ALL_DEVICES.keySet()) {
       if (physicalLocation.getBusNumber() == Integer.parseInt(address.get(0))) {
         byte[] locationOnBus = physicalLocation.getLocationOnBus();
         if (locationOnBus.length != address.size() - 1)
@@ -49,10 +50,14 @@ public class UsbRelayBoard implements Comparable<UsbRelayBoard> {
           }
         }
         if (match)
-          urb = new UsbRelayBoard(allDevices.get(physicalLocation));
+          return new UsbRelayBoard(ALL_DEVICES.get(physicalLocation));
       }
     }
-    return urb;
+    return null;
+  }
+
+  public static void resetDeviceList() {
+    ALL_DEVICES = null;
   }
 
   public UsbRelayBoard(UsbDevice device) {
