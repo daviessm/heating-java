@@ -13,11 +13,10 @@ import org.usb4java.LibUsb;
 public class UsbUtils {
   private static Context CONTEXT = null;
   private static boolean INITIALISED = false;
-  private static DeviceList DEVICE_LIST = null;
 
   private UsbUtils() {
   }
-  
+
   private static void init() throws UsbException {
     if (null == CONTEXT) {
       CONTEXT = new Context();
@@ -25,28 +24,19 @@ public class UsbUtils {
     INITIALISED = (LibUsb.init(CONTEXT) >= 0);
     if (!INITIALISED)
       throw new UsbException("Unable to initialise libusb");
-    
-    DEVICE_LIST = new DeviceList();
-    if (LibUsb.getDeviceList(CONTEXT, DEVICE_LIST) < 0)
-       throw new UsbException("Unable to get device list");   
-    
+
     INITIALISED = true;
   }
-  
-  public static void deinit() {
-    if (INITIALISED) {
-      LibUsb.freeDeviceList(DEVICE_LIST, true);
-      DEVICE_LIST = null;
-      INITIALISED = false;
-    }    
-  }
-  
+
   public static List<UsbDevice> findDevices(String idVendor, String idProduct) throws UsbException {
     if (!INITIALISED)
       init();
     
     List<UsbDevice> usbDevices = new ArrayList<UsbDevice>();
-    for (Device d : DEVICE_LIST) {
+    DeviceList deviceList = new DeviceList();
+    if (LibUsb.getDeviceList(CONTEXT, deviceList) < 0)
+       throw new UsbException("Unable to get device list");   
+    for (Device d : deviceList) {
       DeviceDescriptor descriptor = new DeviceDescriptor();
       if (LibUsb.getDeviceDescriptor(d, descriptor) != 0)
         throw new UsbException("Unable to get device descriptor for device " + d.toString());
@@ -55,13 +45,14 @@ public class UsbUtils {
           descriptor.idProduct() == Short.parseShort(idProduct, 16))
         usbDevices.add(new UsbDevice(d, descriptor));
     }
+    LibUsb.freeDeviceList(deviceList, true);
     return usbDevices;
   }
   
   public static byte[] getDevicePhysicalLocation(UsbDevice device) throws UsbException {
     if (!INITIALISED)
       init();
- 
+
     ByteBuffer buffer = ByteBuffer.allocateDirect(7);
     int numFilled = LibUsb.getPortNumbers(device.getDevice(), buffer);
     if (numFilled <= 0)
@@ -71,5 +62,4 @@ public class UsbUtils {
     buffer.get(ret);
     return ret;
   }
-
 }
