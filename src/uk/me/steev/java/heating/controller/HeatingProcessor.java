@@ -51,6 +51,7 @@ public class HeatingProcessor implements Runnable, Processable {
         Duration proportionalHeatingIntervalMinutes;
         Duration minimumActivePeriodMinutes;
         double overshootDegrees;
+        String logMessage = "";
         try {
           minimumTemperature = HeatingConfiguration.getIntegerSetting("heating", "minimum_temperature");
           minutesPerDegree = Duration.ofMinutes(HeatingConfiguration.getIntegerSetting("heating", "minutes_per_degree"));
@@ -83,10 +84,11 @@ public class HeatingProcessor implements Runnable, Processable {
           if (LocalDateTime.now().isAfter(eventStartTime) &&
               LocalDateTime.now().isBefore(eventEndTime)) {
             shouldPreheat = true;
-            logger.info("Preheat should be on");
             try {
-              if (!heating.getBoiler().isPreheating())
+              if (!heating.getBoiler().isPreheating()) {
+                logMessage += "\nPreheat should be on";
                 heating.getBoiler().startPreheating();
+              }
             } catch (RelayException re) {
               logger.catching(Level.ERROR, re);
               //Reset all the relays
@@ -97,7 +99,7 @@ public class HeatingProcessor implements Runnable, Processable {
         try {
           if (heating.getBoiler().isPreheating() &&
               !shouldPreheat) {
-            logger.info("Preheat should be off");
+            logMessage += "\nPreheat should be off";
             heating.getBoiler().stopPreheating();
           }
         } catch (RelayException re) {
@@ -123,7 +125,7 @@ public class HeatingProcessor implements Runnable, Processable {
               LocalDateTime.now().isBefore(eventEndTime)) {
             forcedOn = true;
             proportion = (float) proportionalHeatingIntervalMinutes.getSeconds() / 60;
-            logger.info("Heating forced on");
+            logMessage += "\nHeating forced on";
             try {
               if (!heating.getBoiler().isHeating())
                 heating.getBoiler().startHeating();
@@ -169,7 +171,7 @@ public class HeatingProcessor implements Runnable, Processable {
         }
         allCurrentTemps.sort(null);
 
-        logger.info("Current temperatures: " + allCurrentTemps.toString());
+        logMessage = "Current temperatures: " + allCurrentTemps.toString();
 
         if (allCurrentTemps.size() > 0)
           currentTemperature = allCurrentTemps.get(0);
@@ -183,15 +185,14 @@ public class HeatingProcessor implements Runnable, Processable {
         float overrideDegrees = heating.getOverrideDegrees();
         try {
           if (currentTemperature < minimumTemperature + overrideDegrees) {
-            logger.info("Current temperature " +
+            logMessage += "\nCurrent temperature " +
               currentTemperature +
               " is less than minimum temperature " +
               minimumTemperature +
               " (override by " +
-              overrideDegrees + ")");
+              overrideDegrees + ")";
             if (!(heating.getBoiler().isHeating()))
               heating.getBoiler().startHeating();
-            return;
           }
         } catch (RelayException re) {
           logger.catching(Level.ERROR, re);
@@ -271,14 +272,14 @@ public class HeatingProcessor implements Runnable, Processable {
                   timeDueOn.getTemperature() < (double) currentTemperature + overshootDegrees &&
                   timeDueOn.getTimeDueOn().plus(minimumActivePeriodMinutes).isBefore(LocalDateTime.now()) &&
                   heating.getBoiler().isHeating()) {
-                logger.info("Warming up, temperature will reach desired point, turn off");
+                logMessage += "\nWarming up, temperature will reach desired point, turn off";
                 heating.getBoiler().stopHeating();
               } else if (timeDueOn.getStartTime().isAfter(LocalDateTime.now()) &&
                   timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now()) &&
                   timeDueOn.getTemperature() < (double) currentTemperature + overshootDegrees &&
                   timeDueOn.getTimeDueOn().plus(minimumActivePeriodMinutes).isBefore(LocalDateTime.now()) &&
                   !heating.getBoiler().isHeating()) {
-                logger.info("Warming up, will overshoot, stay off");
+                logMessage += "\nWarming up, will overshoot, stay off";
               } else if (timeDueOn.getTimeDueOn().isBefore(LocalDateTime.now())) {
                 if (!timeDueOn.getStartTime().isEqual(timeDueOn.getTimeDueOn())) {
                   logger.debug("Warming up, setting override to 0");
@@ -358,6 +359,7 @@ public class HeatingProcessor implements Runnable, Processable {
           heating.setDesiredTemperature(desiredTemperature);
           heating.setProportion(proportion);
         }
+        logger.info(logMessage);
       }  catch (Throwable t) {
         logger.catching(Level.ERROR, t);
       }
