@@ -35,9 +35,11 @@ public abstract class Relay {
   public RelayType getRelayType() {
     return relayType;
   }
+
   public void setRelayType(RelayType relayType) {
     this.relayType = relayType;
   }
+
   public ArrayList<String> getAddress() {
     return address;
   }

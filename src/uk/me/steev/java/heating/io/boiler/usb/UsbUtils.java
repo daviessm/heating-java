@@ -25,7 +25,19 @@ public class UsbUtils {
     if (!INITIALISED)
       throw new UsbException("Unable to initialise libusb");
 
+    DEVICE_LIST = new DeviceList();
+    if (LibUsb.getDeviceList(CONTEXT, DEVICE_LIST) < 0)
+       throw new UsbException("Unable to get device list");
+
     INITIALISED = true;
+  }
+
+  public static void reinitialiseDevices() throws UsbException {
+    LibUsb.freeDeviceList(DEVICE_LIST, true);
+
+    DEVICE_LIST = new DeviceList();
+    if (LibUsb.getDeviceList(CONTEXT, DEVICE_LIST) < 0)
+       throw new UsbException("Unable to get device list");
   }
 
   public static List<UsbDevice> findDevices(String idVendor, String idProduct) throws UsbException {

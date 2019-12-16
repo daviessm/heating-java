@@ -92,7 +92,7 @@ public class HeatingProcessor implements Runnable, Processable {
             } catch (RelayException re) {
               logger.catching(Level.ERROR, re);
               //Reset all the relays
-              this.heating.setBoiler(new Boiler());
+              this.heating.getBoiler().reset();
             }
           }
         }
@@ -105,7 +105,7 @@ public class HeatingProcessor implements Runnable, Processable {
         } catch (RelayException re) {
           logger.catching(Level.ERROR, re);
           //Reset all the relays
-          this.heating.setBoiler(new Boiler());
+          this.heating.getBoiler().reset();
         }
 
         //Now events that are "on"
@@ -132,7 +132,7 @@ public class HeatingProcessor implements Runnable, Processable {
             } catch (RelayException re) {
               logger.catching(Level.ERROR, re);
               //Reset all the relays
-              this.heating.setBoiler(new Boiler());
+              this.heating.getBoiler().reset();
             }
             break;
           }
@@ -197,7 +197,7 @@ public class HeatingProcessor implements Runnable, Processable {
         } catch (RelayException re) {
           logger.catching(Level.ERROR, re);
           //Reset all the relays
-          this.heating.setBoiler(new Boiler());
+          this.heating.getBoiler().reset();
         }
 
         List<TemperatureEvent> timesDueOn = new ArrayList<>();
@@ -354,7 +354,7 @@ public class HeatingProcessor implements Runnable, Processable {
           } catch (RelayException re) {
             logger.catching(Level.ERROR, re);
             //Reset all the relays
-            this.heating.setBoiler(new Boiler());
+            this.heating.getBoiler().reset();
           }
           heating.setDesiredTemperature(desiredTemperature);
           heating.setProportion(proportion);
