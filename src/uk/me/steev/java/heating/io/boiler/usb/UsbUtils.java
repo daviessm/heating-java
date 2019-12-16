@@ -31,16 +31,16 @@ public class UsbUtils {
   public static List<UsbDevice> findDevices(String idVendor, String idProduct) throws UsbException {
     if (!INITIALISED)
       init();
-    
+
     List<UsbDevice> usbDevices = new ArrayList<UsbDevice>();
     DeviceList deviceList = new DeviceList();
     if (LibUsb.getDeviceList(CONTEXT, deviceList) < 0)
-       throw new UsbException("Unable to get device list");   
+       throw new UsbException("Unable to get device list");
     for (Device d : deviceList) {
       DeviceDescriptor descriptor = new DeviceDescriptor();
       if (LibUsb.getDeviceDescriptor(d, descriptor) != 0)
         throw new UsbException("Unable to get device descriptor for device " + d.toString());
-      
+
       if (descriptor.idVendor() == Short.parseShort(idVendor, 16) &&
           descriptor.idProduct() == Short.parseShort(idProduct, 16))
         usbDevices.add(new UsbDevice(d, descriptor));
@@ -48,7 +48,7 @@ public class UsbUtils {
     LibUsb.freeDeviceList(deviceList, true);
     return usbDevices;
   }
-  
+
   public static byte[] getDevicePhysicalLocation(UsbDevice device) throws UsbException {
     if (!INITIALISED)
       init();
@@ -57,7 +57,7 @@ public class UsbUtils {
     int numFilled = LibUsb.getPortNumbers(device.getDevice(), buffer);
     if (numFilled <= 0)
       throw new UsbException("Unable to get port numbers for device " + device.toString());
-    
+
     byte[] ret = new byte[numFilled];
     buffer.get(ret);
     return ret;
