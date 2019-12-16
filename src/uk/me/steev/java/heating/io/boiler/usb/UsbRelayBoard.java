@@ -17,6 +17,8 @@ public class UsbRelayBoard implements Comparable<UsbRelayBoard> {
     if (address.size() < 2) //bus number, device number [, device number...]
       return null;
 
+    UsbRelayBoard urb = null;
+
     //Set up list of all devices
     Map<UsbPhysicalLocation, UsbDevice> allDevices = new TreeMap<UsbPhysicalLocation, UsbDevice>();
     logger.trace("Looking for USB devices");
@@ -47,10 +49,10 @@ public class UsbRelayBoard implements Comparable<UsbRelayBoard> {
           }
         }
         if (match)
-          return new UsbRelayBoard(allDevices.get(physicalLocation));
+          urb = new UsbRelayBoard(allDevices.get(physicalLocation));
       }
     }
-    return null;
+    return urb;
   }
 
   public UsbRelayBoard(UsbDevice device) {
