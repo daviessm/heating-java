@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
+import uk.me.steev.java.heating.io.boiler.usb.UsbUtils;
 
 public class Boiler {
   static final Logger logger = LogManager.getLogger(Boiler.class.getName());
@@ -17,6 +18,16 @@ public class Boiler {
   protected LocalDateTime timeHeatingOff;
 
   public Boiler() throws RelayException, HeatingException {
+    Map<String, HeatingConfiguration.RelayConfiguration> allRelays = HeatingConfiguration.getRelayConfiguration();
+    this.heatingRelay = Relay.findRelay(RelayType.USB, allRelays.get("heating"));
+    this.preheatRelay = Relay.findRelay(RelayType.USB, allRelays.get("preheat"));
+
+    this.timeHeatingOff = LocalDateTime.now().minusDays(1);
+  }
+
+  public void reset() throws RelayException, HeatingException {
+    UsbUtils.reinitialiseDevices();
+
     Map<String, HeatingConfiguration.RelayConfiguration> allRelays = HeatingConfiguration.getRelayConfiguration();
     this.heatingRelay = Relay.findRelay(RelayType.USB, allRelays.get("heating"));
     this.preheatRelay = Relay.findRelay(RelayType.USB, allRelays.get("preheat"));
