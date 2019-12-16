@@ -34,6 +34,8 @@ public class UsbUtils {
   }
 
   public static void reinitialiseDevices() throws UsbException {
+    if (!INITIALISED)
+      init();
     LibUsb.freeDeviceList(DEVICE_LIST, true);
 
     DEVICE_LIST = new DeviceList();
