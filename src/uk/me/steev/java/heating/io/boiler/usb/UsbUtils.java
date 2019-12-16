@@ -13,6 +13,7 @@ import org.usb4java.LibUsb;
 public class UsbUtils {
   private static Context CONTEXT = null;
   private static boolean INITIALISED = false;
+  private static DeviceList DEVICE_LIST = null;
 
   private UsbUtils() {
   }
