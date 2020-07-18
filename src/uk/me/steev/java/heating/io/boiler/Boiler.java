@@ -12,21 +12,25 @@ import uk.me.steev.java.heating.io.boiler.usb.UsbRelayBoard;
 import uk.me.steev.java.heating.io.boiler.usb.UsbUtils;
 
 public class Boiler {
-  static final Logger logger = LogManager.getLogger(Boiler.class.getName());
+  private static final Logger logger = LogManager.getLogger(Boiler.class.getName());
   protected Relay heatingRelay;
   protected Relay preheatRelay;
   protected LocalDateTime timeHeatingOn;
   protected LocalDateTime timeHeatingOff;
 
   public Boiler() throws RelayException, HeatingException {
+    logger.info("Getting relay configuration");
     Map<String, HeatingConfiguration.RelayConfiguration> allRelays = HeatingConfiguration.getRelayConfiguration();
+    logger.info("Finding relays");
     this.heatingRelay = Relay.findRelay(RelayType.USB, allRelays.get("heating"));
     this.preheatRelay = Relay.findRelay(RelayType.USB, allRelays.get("preheat"));
+    logger.info("Found relays");
 
     this.timeHeatingOff = LocalDateTime.now().minusDays(1);
   }
 
   public void reset() throws RelayException, HeatingException {
+    logger.info("Resetting relays");
     UsbRelayBoard.resetDeviceList();
     UsbUtils.reinitialiseDevices();
 

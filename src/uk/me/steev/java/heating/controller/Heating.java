@@ -27,7 +27,7 @@ import uk.me.steev.java.heating.utils.Processable;
 import uk.me.steev.java.heating.utils.ResubmittingScheduledExecutor;
 
 public class Heating {
-  static final Logger logger = LogManager.getLogger(Heating.class.getName());
+  private static final Logger logger = LogManager.getLogger(Heating.class.getName());
   protected Boiler boiler;
   protected WeatherAdapter weather;
   protected CalendarAdapter calendar;
@@ -44,20 +44,27 @@ public class Heating {
 
   public Heating(File configFile) throws HeatingException {
     try {
+      logger.info("Starting up");
+
       //Set up configuration
       HeatingConfiguration.getConfiguration(configFile);
+      logger.info("Got configuration");
 
       //Set up boiler (which sets up the relays)
       this.boiler = new Boiler();
+      logger.info("Set up boiler");
 
       //Set up event processor
       this.processor = new HeatingProcessor(this);
+      logger.info("Set up heating processor");
 
       //Set up weather API
       this.weather = new WeatherAdapter();
+      logger.info("Set up weather adapter");
 
       //Set up events API
       this.calendar = new CalendarAdapter(this.processor);
+      logger.info("Set up calendar");
 
       //Set up an empty set of temperature sensors
       this.sensors = new ConcurrentHashMap<>();
@@ -68,9 +75,11 @@ public class Heating {
       this.scanner = new SensorScanner(this.processor);
 
       this.httpAdapter = HttpAdapter.getHttpAdapter(this);
+      logger.info("Set up HTTP adapter");
 
       //Notify systemd (if running) that startup has finished
       SDNotify.sendNotify();
+      logger.info("Notified SystemD that we're running");
     } catch (RelayException e) {
       throw new HeatingException("Error creating Heating object", e);
     }
@@ -81,20 +90,26 @@ public class Heating {
   }
 
   public void start() throws IOException, HeatingException {
+    logger.info("Starting");
     //Get initial calendar information
     this.calendar.init();
+    logger.info("Initialised calendar");
 
     //Look for new sensors every minute
     this.scheduledExecutor.scheduleAtFixedRate(this.scanner, 0, 1, TimeUnit.MINUTES);
+    logger.info("Scheduled sensor scanner");
 
     //Get new events every six hours
     this.scheduledExecutor.scheduleAtFixedRate(calendar.getEventsUpdater(), 0, 6, TimeUnit.HOURS);
+    logger.info("Scheduled calendar updates");
 
     //Get new outside temperature every fifteen minutes
     this.scheduledExecutor.scheduleAtFixedRate(weather.getUpdater(), 0, 15, TimeUnit.MINUTES);
+    logger.info("Scheduled weather updates");
 
     //Process the whole lot every minute
     this.scheduledExecutor.scheduleWithFixedDelay(this.processor, 0, 1, TimeUnit.MINUTES);
+    logger.info("Scheduled processor...startup complete!");
   }
 
   public Boiler getBoiler() {
