@@ -109,8 +109,8 @@ public class AllDetailsServlet extends GetServlet {
     json.put("goneoutuntil", null == heating.getGoneOutUntilTime() ? JSONObject.NULL : heating.getGoneOutUntilTime());
 
     try {
-      json.put("outside_temp", heating.getWeather().getLatestTemperature());
-      json.put("outside_apparent_temp", heating.getWeather().getApparentTemperature());
+      json.put("outside_temp", String.format("%.2f", heating.getWeather().getLatestTemperature()));
+      json.put("outside_apparent_temp", String.format("%.2f", heating.getWeather().getApparentTemperature()));
     } catch (CallFailedException cfe) {
       logger.catching(cfe);
     }

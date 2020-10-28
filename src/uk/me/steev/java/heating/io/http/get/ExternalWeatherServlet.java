@@ -28,7 +28,7 @@ public class ExternalWeatherServlet extends GetServlet {
       response.setStatus(HttpServletResponse.SC_OK);
       response.setContentType("text/plain");
       try {
-        response.getWriter().println(heating.getWeather().getLatestTemperature());
+        response.getWriter().println(String.format("%.2f", heating.getWeather().getLatestTemperature()));
       } catch (CallFailedException cfe) {
         logger.warn(cfe);
       }
@@ -37,7 +37,7 @@ public class ExternalWeatherServlet extends GetServlet {
       response.setStatus(HttpServletResponse.SC_OK);
       response.setContentType("text/plain");
       try {
-        response.getWriter().println(heating.getWeather().getApparentTemperature());
+        response.getWriter().println(String.format("%.2f", heating.getWeather().getApparentTemperature()));
       } catch (CallFailedException cfe) {
         logger.warn(cfe);
       }
