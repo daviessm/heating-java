@@ -17,28 +17,29 @@ public class WeatherAdapter {
   protected JSONObject latestReading;
   protected HeatingConfiguration config;
   protected TemperatureUpdater updater;
-  
+
   public WeatherAdapter() throws HeatingException {
     this.updater = new TemperatureUpdater();
   }
-  
+
   protected void update() throws HeatingException {
     try {
-      this.latestReading = JSONUtils.readJsonFromUrl("https://api.darksky.net/forecast/" +
-                                                     HeatingConfiguration.getStringSetting("darksky", "api_key") + 
-                                                     "/" + 
-                                                     HeatingConfiguration.getStringSetting("darksky", "latlong") +
-                                                     "?exclude=[minutely,hourly,daily]&units=si");
-      logger.trace("Got response from DarkSky API: " + this.latestReading.toString());
+      this.latestReading = JSONUtils.readJsonFromUrl("https://api.openweathermap.org/data/2.5/weather?appid=" +
+                                                     HeatingConfiguration.getStringSetting("openweathermap", "api_key") +
+                                                     "&lat=" +
+                                                     HeatingConfiguration.getStringSetting("openweathermap", "lat") +
+                                                     "&lon=" +
+                                                     HeatingConfiguration.getStringSetting("openweathermap", "long"));
+      logger.trace("Got response from OpenWeatherMap API: " + this.latestReading.toString());
     } catch (IOException ioe) {
       logger.catching(Level.WARN, ioe);
     }
   }
-  
+
   public double getLatestTemperature() throws CallFailedException {
     if (null != this.latestReading) {
       try {
-        return this.latestReading.getJSONObject("currently").getDouble("temperature");
+        return this.latestReading.getJSONObject("main").getDouble("temp") - 273.15;
       } catch (JSONException jsone) {
         throw new CallFailedException("Unable to find temperature", jsone);
       }
@@ -49,14 +50,14 @@ public class WeatherAdapter {
   public double getApparentTemperature() throws CallFailedException {
     if (null != this.latestReading) {
       try {
-        return this.latestReading.getJSONObject("currently").getDouble("apparentTemperature");
+        return this.latestReading.getJSONObject("main").getDouble("feels_like") - 273.15;
       } catch (JSONException jsone) {
         throw new CallFailedException("Unable to find apparentTemperature", jsone);
       }
     }
     throw new CallFailedException("Stored JSON is null");
   }
-  
+
   public JSONObject getLatestReading() {
     return latestReading;
   }
