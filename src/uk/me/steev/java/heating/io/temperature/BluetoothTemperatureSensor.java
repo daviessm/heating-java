@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 
 import com.github.hypfvieh.bluetooth.DeviceManager;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothAdapter;
@@ -118,7 +119,7 @@ public abstract class BluetoothTemperatureSensor {
     device.disconnect();
     try {
       a.removeDevice(device.getRawDevice());
-    } catch (DBusException dbe) {
+    } catch (DBusException | DBusExecutionException dbe) {
       logger.warn("Unable to remove device", dbe);
     }
   }
@@ -136,7 +137,7 @@ public abstract class BluetoothTemperatureSensor {
     if (this.characteristics.containsKey(uuid)) {
       try {
         this.characteristics.get(uuid).writeValue(data, null);
-      } catch (DBusException dbe) {
+      } catch (DBusException | DBusExecutionException dbe) {
         throw new BluetoothException("Unable to write to UUID", dbe);
       }
     } else {
@@ -149,7 +150,7 @@ public abstract class BluetoothTemperatureSensor {
     if (this.characteristics.containsKey(uuid)) {
       try {
         return this.characteristics.get(uuid).readValue(null);
-      } catch (DBusException dbe) {
+      } catch (DBusException | DBusExecutionException dbe) {
         throw new BluetoothException("Unable to write to UUID", dbe);
       }
     }
@@ -209,7 +210,7 @@ public abstract class BluetoothTemperatureSensor {
           }
         }
       }
-    } catch (DBusException|InterruptedException e) {
+    } catch (DBusException | InterruptedException | DBusExecutionException e) {
       logger.catching(Level.WARN, e);
     }
 
