@@ -34,7 +34,8 @@ public class HeatingServlet extends HttpServlet {
         remoteAddr = request.getRemoteAddr();
       }
 
-      IPAddressString remoteString = new IPAddressString(remoteAddr);
+      //The address sometimes comes in square brackets; remove them
+      IPAddressString remoteString = new IPAddressString(remoteAddr.replaceAll("\\[", "").replaceAll("\\]", ""));
       IPAddress remoteAddress = null;
       try {
         remoteAddress = remoteString.toAddress();
