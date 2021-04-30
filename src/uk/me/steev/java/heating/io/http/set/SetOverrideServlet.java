@@ -4,13 +4,12 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import uk.me.steev.java.heating.controller.Heating;
 import uk.me.steev.java.heating.controller.TemperatureEvent;
 import uk.me.steev.java.heating.io.http.get.CurrentTempServlet;

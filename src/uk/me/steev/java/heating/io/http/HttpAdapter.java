@@ -7,7 +7,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.log.Slf4jLog;
 
 import uk.me.steev.java.heating.controller.Heating;
 import uk.me.steev.java.heating.io.http.get.AllDetailsServlet;
@@ -28,7 +27,6 @@ public class HttpAdapter {
   private HttpAdapter(Heating heating) {
     try {
       HttpAdapter.heating = heating;
-      org.eclipse.jetty.util.log.Log.setLog(new Slf4jLog());
 
       Server server = new Server(8080);
 

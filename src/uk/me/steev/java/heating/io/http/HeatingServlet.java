@@ -2,15 +2,14 @@ package uk.me.steev.java.heating.io.http;
 
 import java.util.Arrays;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import inet.ipaddr.IPAddress;
 import inet.ipaddr.IPAddressSeqRange;
 import inet.ipaddr.IPAddressString;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
 import uk.me.steev.java.heating.controller.Heating;
 import uk.me.steev.java.heating.controller.HeatingConfiguration;
 import uk.me.steev.java.heating.controller.HeatingException;
