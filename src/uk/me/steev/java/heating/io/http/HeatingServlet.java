@@ -5,9 +5,11 @@ import java.util.Arrays;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import inet.ipaddr.AddressStringException;
 import inet.ipaddr.IPAddress;
 import inet.ipaddr.IPAddressSeqRange;
 import inet.ipaddr.IPAddressString;
+import inet.ipaddr.IncompatibleAddressException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import uk.me.steev.java.heating.controller.Heating;
@@ -33,7 +35,13 @@ public class HeatingServlet extends HttpServlet {
       }
 
       IPAddressString remoteString = new IPAddressString(remoteAddr);
-      IPAddress remoteAddress = remoteString.getAddress();
+      IPAddress remoteAddress = null;
+      try {
+        remoteAddress = remoteString.toAddress();
+      } catch (AddressStringException | IncompatibleAddressException e) {
+        logger.warn("Invalid IP address " + remoteString, e);
+        return false;
+      }
 
       for (String s : allowedFrom) {
         IPAddressString ipas = new IPAddressString(s);
